@@ -16,6 +16,7 @@ class CalendarView: UIView {
     // 뒤로가기 버튼
     public let backButton = UIButton().then {
         $0.setImage(.iconBack, for: .normal)
+        $0.isHidden = true
     }
     
     // 년도
@@ -93,26 +94,14 @@ class CalendarView: UIView {
         $0.appearance.eventSelectionColor = .main
     }
     
-    // 캐러셀 배경
-    public let carouselBackground = UIView().then {
+    // 모달 배경
+    public let modalBackgroundView = UIView().then {
+        $0.backgroundColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.6)
         $0.isHidden = true
-        $0.backgroundColor = UIColor(red: 0.93, green: 0.93, blue: 0.93, alpha: 1)
     }
     
-    // 캐러셀
-    public let carouselSlide = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewCarouselLayout().then {
-        $0.itemSize = CGSize(width: 218, height: 278)
-        $0.minimumLineSpacing = 10
-        $0.nonFocusedItemsAlphaValue = 1
-    }).then {
-        $0.isHidden = true
-        $0.showsHorizontalScrollIndicator = false
-        $0.backgroundColor = .clear
-        $0.register(CalendarCollectionViewCell.self, forCellWithReuseIdentifier: CalendarCollectionViewCell.identifier)
-    }
-    
-    // 블러 배경
-    public let blurBackgroundView = UIVisualEffectView(effect: UIBlurEffect(style: .light)).then {
+    // 날짜 개요
+    public let dateView = CalendarDateView().then {
         $0.isHidden = true
     }
     
@@ -152,6 +141,20 @@ class CalendarView: UIView {
         }
     }
     
+    public func updateCalendarScope(to scope: FSCalendarScope) {
+        calendar.scope = scope
+        calendar.snp.remakeConstraints {
+            $0.top.equalTo(safeAreaLayoutGuide).offset(180)
+            $0.horizontalEdges.equalToSuperview().inset(15)
+            $0.height.equalTo(scope == .month ? 310 : 130)
+        }
+        
+        UIView.animate(withDuration: 0.3) {
+            self.layoutIfNeeded()
+        }
+    }
+
+    
     private func setStackView() {
         [ afterYearLabel, afterMonthLabel ].forEach { dateTitleStackView.addArrangedSubview($0) }
     }
@@ -166,8 +169,8 @@ class CalendarView: UIView {
             changeButton,
             monthLabel,
             calendar,
-            carouselBackground, carouselSlide,
-            blurBackgroundView
+            dateView,
+            modalBackgroundView
         ].forEach {
             addSubview($0)
         }
@@ -206,24 +209,18 @@ class CalendarView: UIView {
         }
         
         calendar.snp.makeConstraints {
-            $0.top.equalTo(safeAreaLayoutGuide).offset(210)
+            $0.top.equalTo(safeAreaLayoutGuide).offset(180)
             $0.horizontalEdges.equalToSuperview().inset(15)
-            $0.bottom.equalTo(safeAreaLayoutGuide).offset(-150)
+            $0.height.equalTo(310)
         }
         
-        carouselBackground.snp.makeConstraints {
+        dateView.snp.makeConstraints {
+            $0.top.equalTo(calendar.snp.bottom).offset(30)
             $0.horizontalEdges.equalToSuperview()
-            $0.centerY.equalTo(carouselSlide)
-            $0.height.equalTo(120)
+            $0.height.equalTo(600)
         }
         
-        carouselSlide.snp.makeConstraints {
-            $0.top.equalTo(calendar.snp.bottom).offset(15)
-            $0.horizontalEdges.equalToSuperview()
-            $0.height.equalTo(274)
-        }
-        
-        blurBackgroundView.snp.makeConstraints {
+        modalBackgroundView.snp.makeConstraints {
             $0.edges.equalToSuperview()
         }
     }

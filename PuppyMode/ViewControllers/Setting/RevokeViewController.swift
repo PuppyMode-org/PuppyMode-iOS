@@ -69,6 +69,10 @@ extension RevokeViewController {
         self.kakaoRevoke()
         RootViewControllerService.toLoginViewController()
     }
+    
+    public func setPuppyName(_ name: String) {
+        self.revokeView.configure(name)
+    }
         
     private func kakaoRevoke() {
         UserApi.shared.unlink {(error) in
@@ -84,6 +88,7 @@ extension RevokeViewController {
     private func appleRevoke() {
         // Apple 서버에서 탈퇴하기
     }
+    
     private func changeRootToLoginViewController() {
         let baseViewController = LoginViewController()
         let sceneDelegate = UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate

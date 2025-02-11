@@ -10,7 +10,9 @@ import UIKit
 class RankModel {
     
     static var currentState: SocialState = .global
+
     static var myGlobalRank: RankUserInfo?
+    
     static var myRankInFriends: RankUserInfo?
     
     static var globalRankData: [RankUserInfo] = []

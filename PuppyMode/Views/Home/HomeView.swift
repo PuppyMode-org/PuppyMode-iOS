@@ -8,6 +8,8 @@
 import UIKit
 import SnapKit
 import Then
+import SDWebImage
+import SDWebImageSVGKitPlugin
 
 class HomeView: UIView {
     
@@ -82,7 +84,8 @@ class HomeView: UIView {
     
     lazy private var puppyNameLabel = UILabel().then { label in
         label.font = UIFont(name: "OTSBAggroM", size: 25)
-        label.text = " "
+        label.text = "눈송이 비숑"
+        label.textColor = .black
     }
     
     //MARK: Bottom Dog Info
@@ -124,7 +127,7 @@ class HomeView: UIView {
         self.backgroundColor = UIColor(red: 0.983, green: 0.983, blue: 0.983, alpha: 1)
         self.addTopButtonComponents()
         self.addPuppyImageAndName()
-        self.addBottomComponents()
+        self.addButtomComponents()
     }
     
     required init?(coder: NSCoder) {
@@ -145,6 +148,17 @@ extension HomeView {
         
         progressLabel.text = String(Int(percentageDouble * 100)) + "%"
         progressBar.setProgress(Float(percentageDouble), animated: false)
+        
+        puppyImageButton.sd_setImage(
+            with: URL(string: puppyInfo.imageUrl!)!,
+            for: .normal,
+            placeholderImage: nil,
+            options: [],
+            context: [
+                .imageThumbnailPixelSize: CGSize(width: 100, height: 100),
+                .imagePreserveAspectRatio: true
+            ]
+        )
     }
     
 }
@@ -160,7 +174,7 @@ extension HomeView {
         topButtonStack.addSubview(collectionButton)
         
         topButtonStack.addSubview(decorationLabel)
-        topButtonStack.addSubview(rompingLabel)  
+        topButtonStack.addSubview(rompingLabel)
         topButtonStack.addSubview(collectionLabel)
         
         topButtonStack.snp.makeConstraints { make in
@@ -184,6 +198,7 @@ extension HomeView {
         }
         
         rompingButton.addSubview(countdownLabel)
+        
         countdownLabel.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
             make.centerY.equalToSuperview()
@@ -219,7 +234,7 @@ extension HomeView {
         
         puppyImageButton.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview().inset(superViewSpacing)
-            make.height.equalTo(247)
+            make.height.equalToSuperview().multipliedBy(0.25)
             make.top.equalTo(topButtonStack.snp.bottom).offset(41)
         }
         
@@ -231,7 +246,7 @@ extension HomeView {
         }
     }
     
-    private func addBottomComponents() {
+    private func addButtomComponents() {
         
         self.addSubview(puppyDashboardFrame)
         
@@ -242,7 +257,7 @@ extension HomeView {
         puppyDashboardFrame.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview().inset(16)
             make.top.equalTo(puppyNameLabel.snp.bottom).offset(19)
-            make.height.equalTo(274)
+            make.height.equalToSuperview().multipliedBy(0.30)
         }
         
         dogInfoLabel.snp.makeConstraints { make in
@@ -251,13 +266,13 @@ extension HomeView {
             make.height.equalTo(24)
         }
         
-        progressLabel.snp.makeConstraints{ make in
+        progressLabel.snp.makeConstraints { make in
             make.trailing.equalToSuperview().offset(-37)
             make.top.equalToSuperview().offset(31)
             make.height.equalTo(24)
         }
         
-        progressBar.snp.makeConstraints{make in
+        progressBar.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
             make.top.equalTo(progressLabel.snp.bottom).offset(15)
             make.leading.trailing.equalToSuperview().inset(27)
@@ -268,8 +283,8 @@ extension HomeView {
         
         buttonStack.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview().inset(30)
-            make.top.equalTo(progressBar.snp.bottom).offset(35)
-            make.bottom.equalToSuperview().offset(-30)
+            make.top.equalTo(progressBar.snp.bottom).offset(25)
+            make.height.equalToSuperview().multipliedBy(0.45)
         }
         
         buttonStack.addSubview(drinkingCapacityButton)
@@ -280,7 +295,7 @@ extension HomeView {
         drinkingCapacityButton.snp.makeConstraints { make in
             make.leading.equalToSuperview()
             make.top.bottom.equalToSuperview()
-            make.width.equalTo(buttonStack.snp.width).multipliedBy(0.47) // 버튼 너비를 상위 뷰의 48%로 설정
+            make.width.equalTo(buttonStack.snp.width).multipliedBy(0.48)
         }
         
         buttonStack.addSubview(addDrinkingHistoryButton)
@@ -293,7 +308,6 @@ extension HomeView {
             make.width.equalTo(drinkingCapacityButton.snp.width)
             make.top.equalToSuperview()
             make.trailing.equalToSuperview()
-            
         }
         
     }

@@ -32,7 +32,6 @@ class LoginView: UIView {
         // (identical to box height)
         label.textAlignment = .center
         label.attributedText = NSMutableAttributedString(string: "올바른 음주 습관을 가질 수 있도록 도와드릴게요", attributes: [NSAttributedString.Key.paragraphStyle: paragraphStyle])
-
     }
     
     private lazy var characterImage1 = UIImageView().then { image in
@@ -54,6 +53,7 @@ class LoginView: UIView {
         super.init(frame: frame)
         self.backgroundColor = .white
         addComponents()
+        choosePuppy()
         startImageTransition()
     }
     
@@ -89,17 +89,7 @@ class LoginView: UIView {
         self.bringSubviewToFront(slogunLabel)
         self.bringSubviewToFront(subLabel)
         
-        characterImage1.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-            make.height.width.equalTo(500)
-        }
-        
-        characterImage2.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-            make.height.width.equalTo(500)
-        }
-        
-        kakaoLoginButton.configure(name: "카카오로 로그인", logo: UIImage(named: "KakaoLogin")!, backgroundColor: .kakaoLogin)
+        kakaoLoginButton.configure(name: "카카오 로그인", logo: UIImage(named: "KakaoLogin")!, backgroundColor: .kakaoLogin)
         
         kakaoLoginButton.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview().inset(16)
@@ -137,6 +127,39 @@ class LoginView: UIView {
             }
         }
     }
+    
+    private func choosePuppy() {
+        switch Int.random(in: 1...2) {
+        case 1:
+            characterImage1.snp.makeConstraints { make in
+                make.center.equalToSuperview()
+                make.height.equalTo(450)
+                make.width.equalTo(500)
+            }
+            characterImage2.snp.makeConstraints { make in
+                make.center.equalToSuperview()
+                make.height.equalTo(450)
+                make.width.equalTo(500)
+            }
+        case 2:
+            characterImage1.image = .normalPuppyHiding
+            characterImage2.image = .normalPuppyShowed
+            characterImage1.snp.makeConstraints { make in
+                make.center.equalToSuperview()
+                make.height.equalTo(450)
+                make.width.equalTo(500)
+            }
+            
+            characterImage2.snp.makeConstraints { make in
+                make.center.equalToSuperview()
+                make.height.equalTo(450)
+                make.width.equalTo(550)
+            }
+        default:
+            return
+        }
+    }
+    
 }
 
 import SwiftUI

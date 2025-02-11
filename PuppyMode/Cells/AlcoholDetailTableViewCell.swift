@@ -11,6 +11,14 @@ class AlcoholDetailTableViewCell: UITableViewCell {
     static let identifier = "AlcoholDetailTableViewCell"
     
     // MARK: - layout
+    public let backView = UIView().then {
+        $0.backgroundColor = .white
+        
+        $0.layer.cornerRadius = 10
+        $0.layer.borderWidth = 1
+        $0.layer.borderColor = UIColor(red: 0.953, green: 0.957, blue: 0.965, alpha: 1).cgColor
+    }
+    
     public let alcoholImage = UIImageView().then {
         $0.backgroundColor = .white
         
@@ -40,11 +48,7 @@ class AlcoholDetailTableViewCell: UITableViewCell {
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
-        
-        self.backgroundColor = .white
-        self.layer.cornerRadius = 10
-        self.layer.borderWidth = 1
-        self.layer.borderColor = UIColor(red: 0.953, green: 0.957, blue: 0.965, alpha: 1).cgColor
+        self.backgroundColor = .clear
         
         self.selectionStyle = .none
         
@@ -58,6 +62,7 @@ class AlcoholDetailTableViewCell: UITableViewCell {
     // MARK: - function
     private func setView() {
         [
+            backView,
             alcoholImage,
             titleLabel,
             degreeLabel
@@ -65,8 +70,13 @@ class AlcoholDetailTableViewCell: UITableViewCell {
             addSubview($0)
         }
         
-        alcoholImage.snp.makeConstraints {
+        backView.snp.makeConstraints {
             $0.verticalEdges.equalToSuperview().inset(10)
+            $0.horizontalEdges.equalToSuperview()
+        }
+        
+        alcoholImage.snp.makeConstraints {
+            $0.centerY.equalToSuperview()
             $0.left.equalToSuperview().offset(10)
             $0.width.height.equalTo(72)
         }

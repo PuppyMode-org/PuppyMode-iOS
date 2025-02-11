@@ -9,8 +9,6 @@ import UIKit
 
 class RevokeView: UIView {
     
-    public var characterName = "000"
-    
     private lazy var titlaLabel = UILabel().then { label in
         label.textColor = UIColor(red: 0.235, green: 0.235, blue: 0.235, alpha: 1)
         label.font = UIFont(name: "Pretendard-SemiBold", size: 20)
@@ -39,7 +37,8 @@ class RevokeView: UIView {
     private lazy var subMessageLabel = UILabel().then { label in
         label.textColor = UIColor(red: 0.541, green: 0.541, blue: 0.557, alpha: 1)
         label.font = UIFont(name: "NotoSansKR-Medium", size: 18)
-        label.text = "\(characterName)이는 이제 볼 수 없을지도 몰라요.."
+        label.numberOfLines = 2
+        label.text = "000 이는 이제 볼 수 없을지도 몰라요.."
     }
     
     public lazy var revokeButton = UIButton().then { btn in
@@ -111,7 +110,10 @@ class RevokeView: UIView {
             make.bottom.equalTo(safeAreaLayoutGuide.snp.bottom).inset(48)
             make.height.equalTo(46)
         }
-        
+    }
+    
+    public func configure(_ name: String) {
+        subMessageLabel.text = name + "이는 이제 볼 수 없을지도 몰라요.."
     }
 }
 

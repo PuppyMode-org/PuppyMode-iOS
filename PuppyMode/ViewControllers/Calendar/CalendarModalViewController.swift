@@ -55,7 +55,7 @@ class CalendarModalViewController: UIViewController {
     private func backgroundTapped(_ sender: UITapGestureRecognizer) {
         let location = sender.location(in: calendarModalView)
         if !calendarModalView.modalView.frame.contains(location) {
-            self.calendarView?.blurBackgroundView.isHidden = true
+            self.calendarView?.modalBackgroundView.isHidden = true
             dismiss(animated: true)
         }
     }
@@ -110,7 +110,7 @@ extension CalendarModalViewController: UICollectionViewDataSource, UICollectionV
         // 캘린더 업데이트
         let selectedMonth = indexPath.item + 1
         calendarView?.updateCalendar(for: currentYear, month: selectedMonth)
-        calendarView?.blurBackgroundView.isHidden = true
+        calendarView?.modalBackgroundView.isHidden = true
         dismiss(animated: true)
     }
     

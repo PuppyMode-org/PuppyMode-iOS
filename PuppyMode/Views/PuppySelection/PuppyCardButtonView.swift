@@ -8,7 +8,6 @@
 import UIKit
 
 class PuppyCardButtonView: UIButton {
-    
     public lazy var puppyImage = UIImageView().then {
         $0.contentMode = .scaleAspectFit
         $0.image = .defaultPuppy

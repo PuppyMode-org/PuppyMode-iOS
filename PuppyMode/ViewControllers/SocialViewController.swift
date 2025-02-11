@@ -21,12 +21,18 @@ class SocialViewController: UIViewController {
         setupTableView()
         setupAction()
         requestToCallFriendsInfo()
-        loadInitialData()
+        initialData()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        refreshData()
+        // Update 호출!
+        SocialService.updateRankData {
+            print("update complete")
+            print("Updated Global User Data ", RankModel.globalRankData)
+            print("Updated Friends Data ", RankModel.friendsRankData)
+            self.fetchData()
+        }
     }
     
     private func setupTableView() {
@@ -34,23 +40,18 @@ class SocialViewController: UIViewController {
         socialView.rankingTableView.dataSource = self
     }
     
-    private func loadInitialData() {
-        SocialService.fetchGlobalRankData { [weak self] in
-            DispatchQueue.main.async {
-                self?.refreshData()
-            }
+    // Global & Friend 데이터 요청 fetchGlobalRankData(), fetchFriendRankData()
+    private func initialData() {
+        SocialService.fetchGlobalRankData {
+            self.fetchData()
         }
-        SocialService.fetchFriendRankData { [weak self] in
-            DispatchQueue.main.async {
-                self?.refreshData()
-            }
+        SocialService.fetchFriendRankData {
+            self.fetchData()
         }
     }
-    
-    private func refreshData() {
-        rankDataToShow = RankModel.currentState == .global
-            ? RankModel.globalRankData
-            : RankModel.friendsRankData
+    //
+    private func fetchData() {
+        rankDataToShow = RankModel.currentState == .global ? RankModel.globalRankData : RankModel.friendsRankData
         if let myCell = RankModel.myGlobalRank {
             socialView.myRankView.configure(rankCell: myCell)
             socialView.myRankView.markMyRank()
@@ -58,22 +59,28 @@ class SocialViewController: UIViewController {
         socialView.rankingTableView.reloadData()
     }
     
+    // 친구 불러오기 허락 요청
     private func requestToCallFriendsInfo() {
         TalkApi.shared.friends { (friends, error) in
-            if let error = error {
-                print(error)
-            } else {
+            if let _ = error {
                 
+            } else {
+                SocialService.fetchFriendRankData {
+                    DispatchQueue.main.async {
+                        self.rankDataToShow = RankModel.friendsRankData
+                        self.socialView.rankingTableView.reloadData()
+                    }
+                }
             }
         }
     }
     
     private func setupAction() {
-        socialView.segmentView.addTarget(self, action: #selector(segmentedControlValueChanged(segment:)), for: .valueChanged)
+        socialView.segmentView.addTarget(self, action: #selector(changeDataToShow(segment:)), for: .valueChanged)
     }
     
     @objc
-    private func segmentedControlValueChanged(segment: UISegmentedControl) {
+    private func changeDataToShow(segment: UISegmentedControl) {
         if segment.selectedSegmentIndex == 0 {
             RankModel.currentState = .global
             rankDataToShow = RankModel.globalRankData
@@ -81,10 +88,13 @@ class SocialViewController: UIViewController {
         } else {
             RankModel.currentState = .friends
             rankDataToShow = RankModel.friendsRankData
+            requestToCallFriendsInfo()
             socialView.removeMyRankView()
         }
-        socialView.myRankView.configure(rankCell: RankModel.myGlobalRank!)
-        socialView.myRankView.markMyRank()
+        if let myCell = RankModel.myGlobalRank {
+            socialView.myRankView.configure(rankCell: RankModel.myGlobalRank!)
+            socialView.myRankView.markMyRank()
+        }
         socialView.rankingTableView.reloadData()
     }
     
@@ -111,16 +121,16 @@ extension SocialViewController: UITableViewDelegate, UITableViewDataSource {
             cell.addTrophyComponent(rank: Rank(rawValue: indexPath.row + 1) ?? Rank.first)
         }
         
-        switch RankModel.currentState { // Change background to figure my rank
-        case .global:
+        switch RankModel.currentState { // Global, Friend 데이터에서 자신의 셀을 식별하고 배경색 변하게 하기
+        case .global :
             if let rank = RankModel.myGlobalRank?.rank {
-                if rank == data.rank && RankModel.myGlobalRank?.username == data.username {
+                if rank == data.rank {
                     cell.markMyRank()
                 }
             }
-        case .friends:
+        case .friends :
             if let rank = RankModel.myRankInFriends?.rank {
-                if rank == data.rank && RankModel.myRankInFriends?.username == data.username {
+                if rank == data.rank {
                     cell.markMyRank()
                 }
             }
@@ -133,7 +143,7 @@ extension SocialViewController: UITableViewDelegate, UITableViewDataSource {
         let offsetY = scrollView.contentOffset.y
         let contentHeight = scrollView.contentSize.height
         let height = scrollView.frame.size.height
-                
+        
         if offsetY > contentHeight - height {
             // 기존의 work item이 있다면 취소
             throttleWorkItem?.cancel()

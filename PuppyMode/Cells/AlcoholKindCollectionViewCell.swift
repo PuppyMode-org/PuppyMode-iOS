@@ -11,6 +11,15 @@ class AlcoholKindCollectionViewCell: UICollectionViewCell {
     static let identifier = "AlcoholKindCollectionViewCell"
     
     // MARK: - layout
+    // 배경
+    public let backView = UIView().then {
+        $0.backgroundColor = .white
+        
+        $0.layer.cornerRadius = 10
+        $0.layer.borderWidth = 1
+        $0.layer.borderColor = UIColor(red: 0.953, green: 0.957, blue: 0.965, alpha: 1).cgColor
+    }
+    
     // 타이틀
     public let titleLabel = UILabel().then {
         $0.textColor = UIColor(red: 0.235, green: 0.235, blue: 0.235, alpha: 1)
@@ -20,10 +29,6 @@ class AlcoholKindCollectionViewCell: UICollectionViewCell {
     // MARK: - init
     override init(frame: CGRect) {
         super.init(frame: frame)
-        
-        self.backgroundColor = .white
-        self.layer.cornerRadius = 10
-        
         setView()
     }
     
@@ -33,7 +38,16 @@ class AlcoholKindCollectionViewCell: UICollectionViewCell {
     
     // MARK: - function
     private func setView() {
-        addSubview(titleLabel)
+        [
+            backView,
+            titleLabel
+        ].forEach {
+            addSubview($0)
+        }
+        
+        backView.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
         
         titleLabel.snp.makeConstraints {
             $0.centerX.equalToSuperview()

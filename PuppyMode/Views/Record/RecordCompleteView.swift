@@ -7,6 +7,7 @@
 
 import UIKit
 import SnapKit
+import Then
 
 class RecordCompleteView: UIView {
     
@@ -31,16 +32,15 @@ class RecordCompleteView: UIView {
     
     let steakImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = UIImage(named: "steak_image") // Replace with your steak image asset name
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()
     
     let rewardLabel: UILabel = {
         let label = UILabel()
-        label.text = "소고기를 획득했어요!"
+        label.text = "보상을 획득했어요!"
+        label.textColor = UIColor(red: 0.235, green: 0.235, blue: 0.235, alpha: 1)
         label.font = UIFont(name: "NotoSansKR-Medium", size: 20)
-        label.textColor = UIColor.black
         label.textAlignment = .center
         return label
     }()
@@ -49,7 +49,7 @@ class RecordCompleteView: UIView {
         let button = UIButton(type: .system)
         button.setTitle("먹이주러 가기", for: .normal)
         button.setTitleColor(.black, for: .normal)
-        button.backgroundColor = UIColor(red: 115/255, green: 200/255, blue: 177/255, alpha: 1) // Match your design color
+        button.backgroundColor = .main
         button.layer.cornerRadius = 10
         button.titleLabel?.font =  UIFont(name: "NotoSansKR-Regular", size: 15)
         return button
@@ -79,7 +79,7 @@ class RecordCompleteView: UIView {
         // Set constraints using SnapKit
         
         titleLabel.snp.makeConstraints { make in
-            make.top.equalTo(safeAreaLayoutGuide).offset(40)
+            make.top.equalTo(safeAreaLayoutGuide).offset(30)
             make.centerX.equalToSuperview()
         }
         
@@ -89,9 +89,10 @@ class RecordCompleteView: UIView {
         }
         
         steakImageView.snp.makeConstraints { make in
-            make.top.equalTo(messageLabel.snp.bottom).offset(20)
+            make.top.equalTo(messageLabel.snp.bottom).offset(44)
             make.centerX.equalToSuperview()
-            make.width.height.equalTo(250)
+            make.horizontalEdges.equalToSuperview()
+            make.height.equalTo(250)
         }
         
         rewardLabel.snp.makeConstraints { make in
@@ -100,15 +101,15 @@ class RecordCompleteView: UIView {
         }
         
         actionButton.snp.makeConstraints { make in
-            make.top.equalTo(rewardLabel.snp.bottom).offset(20)
+            make.top.equalTo(rewardLabel.snp.bottom).offset(30)
             make.centerX.equalToSuperview()
-            make.width.equalTo(200) // 버튼 너비
-            make.height.equalTo(44) // 버튼 높이
+            make.width.equalTo(168) // 버튼 너비
+            make.height.equalTo(46) // 버튼 높이
         }
         
         progressComponentView.snp.makeConstraints{ make in
             make.top.equalTo(actionButton.snp.bottom).offset(95)
-            make.left.equalToSuperview().offset(40)
+            make.horizontalEdges.equalToSuperview()
         }
        
     }
@@ -120,25 +121,31 @@ class ProgressComponentView: UIView {
     private let progressLabel: UILabel = {
         let label = UILabel()
         label.text = "Level 1 아기사자 포메라니안"
-        label.font = UIFont(name: "SB Aggro", size: 14)
-        label.textColor = UIColor.gray
+        label.textColor = UIColor(red: 0.624, green: 0.584, blue: 0.584, alpha: 1)
+        label.font = UIFont(name: "OTSBAggroM", size: 14)
         return label
     }()
     
-    private let progressBar: UIProgressView = {
-        let progressView = UIProgressView(progressViewStyle: .default)
-        progressView.progressTintColor = UIColor(red: 115/255, green: 200/255, blue: 177/255, alpha: 1) // Match your design color
-        progressView.trackTintColor = UIColor.lightGray
-        progressView.progress = 0.55 // Set initial progress (55%)
-        progressView.layer.cornerRadius = 30
-        return progressView
-    }()
+    private let progressView = UIProgressView().then {
+        $0.progressTintColor = .main
+        $0.trackTintColor = UIColor(red: 0.975, green: 0.975, blue: 0.975, alpha: 1)
+        
+        $0.clipsToBounds = true
+        $0.layer.cornerRadius = 10.5
+        $0.subviews[1].clipsToBounds = true
+        $0.layer.sublayers?[1].cornerRadius = 10.5
+        
+        $0.layer.borderWidth = 1
+        $0.layer.borderColor = UIColor(red: 0.837, green: 0.837, blue: 0.837, alpha: 1).cgColor
+        
+        $0.progress = 0.3
+    }
     
     private let progressPercentageLabel: UILabel = {
         let label = UILabel()
         label.text = "55%"
-        label.font = UIFont.systemFont(ofSize: 14)
-        label.textColor = UIColor.gray
+        label.textColor = UIColor(red: 0.235, green: 0.235, blue: 0.235, alpha: 1)
+        label.font = UIFont(name: "NotoSansKR-Medium", size: 15)
         return label
     }()
     
@@ -159,33 +166,40 @@ class ProgressComponentView: UIView {
     private func setupViews() {
         
         // Add subviews to the view hierarchy
-        [progressLabel, progressBar, progressPercentageLabel].forEach { addSubview($0) }
+        [progressLabel, progressView, progressPercentageLabel].forEach { addSubview($0) }
         
         // Set constraints using SnapKit
         
         progressLabel.snp.makeConstraints { make in
             make.top.equalToSuperview()
-            make.leading.equalToSuperview().offset(20)
+            make.leading.equalTo(progressView.snp.leading).offset(5)
         }
         
         progressPercentageLabel.snp.makeConstraints { make in
             make.top.equalToSuperview()
-            make.trailing.equalToSuperview().offset(-20)
+            make.trailing.equalTo(progressView.snp.trailing)
             make.centerY.equalTo(progressLabel)
         }
         
-        progressBar.snp.makeConstraints { make in
+        progressView.snp.makeConstraints { make in
             make.top.equalTo(progressLabel.snp.bottom).offset(7)
-            make.leading.equalToSuperview().offset(20)
-            make.trailing.equalToSuperview().offset(-20)
-            make.width.equalTo(290)
+            make.horizontalEdges.equalToSuperview().inset(50)
             make.height.equalTo(21)
         }
     }
     
     // MARK: - Public Methods to Update Progress
     func updateProgress(to value: Float, percentageText: String) {
-        progressBar.progress = value
+        progressView.progress = value
         progressPercentageLabel.text = percentageText
     }
+    
+    func setLevelText(_ text: String) {
+        progressLabel.text = text
+    }
+}
+
+import SwiftUI
+#Preview {
+    RecordCompleteView()
 }
