@@ -7,21 +7,13 @@
 
 import UIKit
 import SnapKit
+import SVGKit
 
 class DecoView: UIView {
     
     // 버튼이 눌린 동작에 대한 선택
     var onTagSelected: ((String) -> Void)?
     public var itemButtons: [UIButton] = []
-    
-    public lazy var imageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.contentMode = .scaleAspectFit
-        // imageView.clipsToBounds =
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-
-        return imageView
-    }()
     
     //MARK: Puppy Image & Name
     lazy public var puppyImageButton = UIButton().then { button in
@@ -30,6 +22,7 @@ class DecoView: UIView {
         button.imageView?.contentMode = .center
         button.imageView?.clipsToBounds = false
         button.imageView?.translatesAutoresizingMaskIntoConstraints = false
+        
     }
     
     lazy public var puppyNameLabel = UILabel().then { label in
@@ -95,14 +88,6 @@ class DecoView: UIView {
             make.height.equalTo(247)
             make.top.equalTo(self.safeAreaLayoutGuide).offset(100)
         }
-        
-        puppyImageButton.addSubview(imageView)
-        if let imageSize = imageView.image?.size {
-            imageView.snp.makeConstraints { make in
-                make.top.leading.trailing.equalToSuperview()
-                make.height.equalTo(imageView.snp.width).multipliedBy(imageSize.height / imageSize.width)
-            }
-        }
 
         
         self.addSubview(puppyNameLabel)
@@ -145,7 +130,7 @@ class DecoView: UIView {
     
     
     private func createButtons() {
-        var num = 0
+        var num = 1
         for tag in itemKey.tags {
             let button = UIButton(type: .system)
             button.backgroundColor = .clear

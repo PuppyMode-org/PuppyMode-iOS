@@ -72,7 +72,6 @@ class DecoItemModel {
                 }
             }
         }
-        print("못찾음")
         return nil // 아이템을 찾지 못한 경우
     }
 }

@@ -14,7 +14,8 @@ class DecoViewController: UIViewController {
     private var collectionView: UICollectionView!
     private var items: [DecoItemModel] = []         // 컬렉션 뷰에 표시할 데이터 배열
     private var selectedLevel: Int = 1              // 초기 레벨 설정
-    private var purchasedItemIds: Set<Int> = []
+    private var purchasedItemIds: Set<Int> = []    //  구매한 아이템을 저장하는 Set
+    private var wearedItemsId: Set<Int> = []
     private var currentLevel: Int = 0                   // 현재 레벨 값 저장
     
     private lazy var decoView: DecoView = {
@@ -33,26 +34,21 @@ class DecoViewController: UIViewController {
         self.view = decoView
         
         setupNavigationBar(title: "꾸미기", rightText: "")
-        
-        // '모자' 버튼을 눌린 상태로 설정
-        if let hatButton = view.viewWithTag(0) as? UIButton {
-            hatButton.isSelected = true
-            hatButton.backgroundColor = .darkGray
-            hatButton.tintColor = .white
-            hatButton.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .bold)
-        }
-         
-        // 초기 데이터 설정
-        items = DecoItemModel.hatData.flatMap { $0.items } +
-                DecoItemModel.clothesData.flatMap { $0.items } +
-                DecoItemModel.floorData.flatMap { $0.items } +
-                DecoItemModel.houseData.flatMap { $0.items } +
-                DecoItemModel.toyData.flatMap { $0.items }
-        
-        
         setupCollectionView()
-        
     }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        
+        if let hatButton = view.viewWithTag(1) as? UIButton {
+            if selectedButton == nil {
+                categoryButtonTapped(hatButton)
+            }
+        }
+    }
+
+
+
     
     override func viewWillAppear(_ animated: Bool) {
         fetchPuppyNameFromServer()
@@ -111,18 +107,23 @@ class DecoViewController: UIViewController {
         case "모자":
             items = DecoItemModel.hatData[0].items
             fetchItemsFromServer(categoryId: 1)
+            fetchEquippedItemsFromServer()
         case "옷":
             items = DecoItemModel.clothesData[0].items
             fetchItemsFromServer(categoryId: 2)
+            fetchEquippedItemsFromServer()
         case "집":
             items = DecoItemModel.houseData[0].items
             fetchItemsFromServer(categoryId: 3)
+            fetchEquippedItemsFromServer()
         case "바닥":
             items = DecoItemModel.floorData[0].items
             fetchItemsFromServer(categoryId: 4)
+            fetchEquippedItemsFromServer()
         case "장난감":
             items = DecoItemModel.toyData[0].items
             fetchItemsFromServer(categoryId: 5)
+            fetchEquippedItemsFromServer()
         default:
             break
         }
@@ -257,12 +258,31 @@ class DecoViewController: UIViewController {
             switch response.result {
             case .success(let response):
                 
+                // 착용한 아이템이 있다면 해제
+                self.items.forEach { item in
+                    if item.isWeared {
+                        self.unWearedItem(item: item)
+                    }
+                }
+                
+                // 모든 아이템의 isWeared를 false로 초기화
+                self.items.forEach { $0.isWeared = false }
+                        
                 if let items = response.result, !items.isEmpty {
                     // 배열에 아이템이 있을 경우 → 첫 번째 아이템 사용
                     if let firstItem = items.first,
                        let puppyImage = DecoItemModel.getLevelImage(forItemId: firstItem.itemId, level: self.currentLevel) {
                         self.decoView.puppyImageButton.setImage(puppyImage, for: .normal)
                     }
+                    
+                    // 로컬 아이템 배열에서 itemId가 일치하는 아이템을 찾아 isWeared = true로 설정, wearedItem에 입고 있는 아이템의 Id값 저장
+                    for item in items {
+                        if let index = self.items.firstIndex(where: { $0.itemId == item.itemId }) {
+                            self.items[index].isWeared = true
+                            self.wearedItem(item: self.items[index])
+                        }
+                    }
+                    
                 } else {
                     // 배열이 비어있을 경우 → 현재 레벨에 따라 기본 이미지 설정
                     let defaultImage: UIImage?
@@ -290,9 +310,6 @@ class DecoViewController: UIViewController {
 
 }
 
-// 구매한 아이템을 저장하는 Set
-var purchasedItemIds: Set<Int> = []
-
 // MARK: - UICollectionViewDataSource
 extension DecoViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -304,12 +321,13 @@ extension DecoViewController: UICollectionViewDataSource {
         
         let item = items[indexPath.item]
         let isPurchased = purchasedItemIds.contains(item.itemId)
+        let isWeared = wearedItemsId.contains(item.itemId)
 
         cell.decoItemImageView.image = item.image
         cell.decoItemLabel.text = item.price
 
-        updateCellUI(cell, isPurchased: isPurchased)
-        
+        updateCellUI(cell, isPurchased: isPurchased, isWeared: isWeared)
+            
         return cell
     }
 }
@@ -375,9 +393,10 @@ extension DecoViewController: UICollectionViewDelegate {
                 let wearAction = UIAlertAction(title: "확인", style: .default) { _ in
                     self.postWearItemToServer(categoryId: categoryId!, itemId: selectedItem.itemId)
                     
-                    // 착용한 아이템에 대해 셀 색상 변경
-                    if let cell = collectionView.cellForItem(at: indexPath) {
-                    }
+//                    // 착용한 아이템에 대해 셀 색상 변경
+//                    if let cell = collectionView.cellForItem(at: indexPath) {
+//                        self.updateCellUI(cell as! DecoItemViewCell, isPurchased: true, isWeared: false)
+//                    }
                 }
                 let cancelAction = UIAlertAction(title: "취소", style: .cancel)
                 
@@ -389,14 +408,11 @@ extension DecoViewController: UICollectionViewDelegate {
             
             // 아이템 착용이 된 경우
             if selectedItem.isWeared == true {
-                let alert = UIAlertController(title: nil, message: "아이템 착용을 해제하시겠습니까?", preferredStyle: .alert)
+                let alert = UIAlertController(title: nil, message: "착용한 아이템을 해제하시겠습니까?", preferredStyle: .alert)
                 
                 let wearAction = UIAlertAction(title: "확인", style: .default) { _ in
                     self.postUnWearItemToServer(categoryId: categoryId!, itemId: selectedItem.itemId)
 
-                    // 착용한 아이템에 대해 셀 색상 변경
-                    if let cell = collectionView.cellForItem(at: indexPath) {
-                    }
                 }
                 let cancelAction = UIAlertAction(title: "취소", style: .cancel)
                 
@@ -440,7 +456,7 @@ extension DecoViewController {
                             if let index = self?.items.firstIndex(where: { $0.itemId == response.result!.itemId }) {
                                 self?.items[index].isPurchased = true
                             }
-
+                            
                         case "잔여 포인트가 부족합니다.":
                             self?.showAlert(title: "", message: "포인트가 부족합니다.")
                             
@@ -448,6 +464,7 @@ extension DecoViewController {
                             break
                         }
                     }
+                                        
                 case .failure(let error):
                     print("Network Error: \(error.localizedDescription)")
                 }
@@ -462,13 +479,37 @@ extension DecoViewController {
         let indexPath = IndexPath(item: index, section: 0)
          
         if let cell = collectionView.cellForItem(at: indexPath) as? DecoItemViewCell {
-            updateCellUI(cell, isPurchased: true)
+            updateCellUI(cell, isPurchased: true, isWeared: false)
         }
         collectionView.reloadItems(at: [indexPath]) // 변경된 아이템만 리로드
      }
     
+    private func wearedItem(item: DecoItemModel) {
+        wearedItemsId.insert(item.itemId)   // 입고 있는 아이템 저장
+        
+        guard let index = items.firstIndex(where: { $0.itemId == item.itemId }) else { return }
+        let indexPath = IndexPath(item: index, section: 0)
+         
+        if let cell = collectionView.cellForItem(at: indexPath) as? DecoItemViewCell {
+            updateCellUI(cell, isPurchased: true, isWeared: true)
+        }
+        collectionView.reloadItems(at: [indexPath])
+    }
+    
+    private func unWearedItem(item: DecoItemModel) {
+        wearedItemsId.remove(item.itemId)
+        
+        guard let index = items.firstIndex(where: { $0.itemId == item.itemId }) else { return }
+        let indexPath = IndexPath(item: index, section: 0)
+        
+        if let cell = collectionView.cellForItem(at: indexPath) as? DecoItemViewCell {
+            updateCellUI(cell, isPurchased: true, isWeared: false)
+        }
+        collectionView.reloadItems(at: [indexPath])
+    }
+    
      
-    private func updateCellUI(_ cell: DecoItemViewCell, isPurchased: Bool) {
+    private func updateCellUI(_ cell: DecoItemViewCell, isPurchased: Bool, isWeared: Bool) {
         if isPurchased {
             cell.overlayView.backgroundColor = UIColor.black.withAlphaComponent(0.0)
             cell.lockImageView.isHidden = true
@@ -477,6 +518,19 @@ extension DecoViewController {
             cell.overlayView.backgroundColor = UIColor.black.withAlphaComponent(0.5)
             cell.lockImageView.isHidden = false
             cell.decoItemLabel.isHidden = false
+        }
+        
+        if isWeared {
+            // 아이템이 착용되었으면 셀에 색상을 변경 (예: 초록색 배경)
+            cell.layer.borderColor = UIColor.gray.cgColor
+            cell.layer.borderWidth = 4
+            cell.layer.shadowColor = UIColor.gray.cgColor
+            cell.layer.cornerRadius = 10
+        } else {
+            // 착용되지 않았으면 셀 색상을 원래대로 되돌림
+            cell.layer.borderColor = UIColor.clear.cgColor
+            cell.layer.shadowColor = UIColor.clear.cgColor
+            cell.layer.borderWidth = 0
         }
     }
     
@@ -513,7 +567,6 @@ extension DecoViewController {
                     // 서버에서 받은 소유한 아이템 ID를 저장
                     self.purchasedItemIds = Set(response.result?.compactMap { $0.itemId } ?? [])
                     print("서버에서 받은 아이템 ID들: \(self.purchasedItemIds)")
-
                     
                     // items 배열에서 해당 아이템들의 isPurchased 업데이트
                     self.items = self.items.map { item in
@@ -538,7 +591,7 @@ extension DecoViewController {
         for (index, item) in items.enumerated() {
             let indexPath = IndexPath(item: index, section: 0)
             if let cell = collectionView.cellForItem(at: indexPath) as? DecoItemViewCell {
-                updateCellUI(cell, isPurchased: item.isPurchased)
+                updateCellUI(cell, isPurchased: item.isPurchased, isWeared: false)
             }
         }
         collectionView.reloadData()
@@ -563,17 +616,23 @@ extension DecoViewController {
                 case .success(let response):
                     print("아이템 착용하기 서버 연동 성공: \(response.result)")
                     
-                    
+                    // 다른 아이템들의 isWeared를 false로 초기화하고, 아이템 해제 메서드 호출
+                    self!.items.forEach { item in
+                        if item.isWeared {
+                            self!.unWearedItem(item: item)
+                        }
+                        item.isWeared = false
+                    }
+                                  
                     // 착용한 아이템 : isWeared = true 처리
                     if let index = self?.items.firstIndex(where: { $0.itemId == response.result!.itemId }) {
                         self?.items[index].isWeared = true
+                        self!.wearedItem(item: self!.items[index])
                     }
                     
                     self!.fetchEquippedItemsFromServer()
-                    
-                    
-                    // 아이템 착용하면 선택한 cell에 대한 layer 색상을 다르게 해서 착용한 아이템이 뭔지 보여주도록 함
-    
+
+
                 case .failure(let error):
                     print("Network Error: \(error.localizedDescription)")
                 }
@@ -589,7 +648,7 @@ extension DecoViewController {
         let urlString = K.String.puppymodeLink + "/puppies/\(categoryId)/items/\(itemId)/unequip"
         
         AF.request(urlString,
-                   method: .post,
+                   method: .patch,
                    headers: headers)
             .responseDecodable(of: PuppyWearResponse.self) { [weak self] response in
         
@@ -599,38 +658,19 @@ extension DecoViewController {
                 case .success(let response):
                     print("아이템 해제하기 서버 연동 성공: \(response.result)")
                     
-                    
-                    // 착용한 아이템 : isWeared = true 처리
-                    if let index = self?.items.firstIndex(where: { $0.itemId == response.result!.itemId }) {
+                    // 착용 취소한 아이템 : isWeared = false 처리
+                    if let index = self?.items.firstIndex(where: { $0.itemId == response.result?.itemId }) {
                         self?.items[index].isWeared = false
+                        self!.unWearedItem(item: self!.items[index])
                     }
-                    
-                    self!.fetchEquippedItemsFromServer()
-                    
-                    
+                                        
                     // 아이템 착용하면 선택한 cell에 대한 layer 색상을 다르게 해서 착용한 아이템이 뭔지 보여주도록 함
-    
+                    self!.fetchEquippedItemsFromServer()
+
                 case .failure(let error):
                     print("Network Error: \(error.localizedDescription)")
                 }
             }
-    }
-    
-    
-    //
-    
-    // 아이템 착용 후 셀의 색상을 변경하는 함수
-    func applyItemToCell(cell: UICollectionViewCell, isWorn: Bool) {
-        if isWorn {
-            // 아이템이 착용되었으면 셀에 색상을 변경 (예: 초록색 배경)
-            cell.layer.borderColor = UIColor.gray.cgColor
-            cell.layer.borderWidth = 2  // 경계선 두께
-            cell.layer.cornerRadius = 10
-        } else {
-            // 착용되지 않았으면 셀 색상을 원래대로 되돌림
-            cell.layer.borderColor = UIColor.clear.cgColor
-            cell.layer.borderWidth = 0
-        }
     }
 }
 
