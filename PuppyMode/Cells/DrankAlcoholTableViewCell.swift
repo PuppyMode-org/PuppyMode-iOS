@@ -9,9 +9,22 @@ import UIKit
 
 class DrankAlcoholTableViewCell: UITableViewCell {
     // MARK: - Views
+    let backView = UIView().then {
+        $0.backgroundColor = .white
+        
+        $0.layer.cornerRadius = 10
+        $0.layer.borderWidth = 1
+        $0.layer.borderColor = UIColor(red: 0.953, green: 0.957, blue: 0.965, alpha: 1).cgColor
+    }
+    
     let alcoholImageView = UIImageView().then {
         $0.contentMode = .scaleAspectFit
         $0.clipsToBounds = true
+        $0.backgroundColor = .white
+        
+        $0.layer.cornerRadius = 10
+        $0.layer.borderWidth = 1
+        $0.layer.borderColor = UIColor(red: 0.953, green: 0.957, blue: 0.965, alpha: 1).cgColor
     }
     
     let alcoholNameLabel = UILabel().then {
@@ -25,19 +38,16 @@ class DrankAlcoholTableViewCell: UITableViewCell {
     }
     
     let deleteButton = UIButton(type: .system).then {
-        $0.setTitle("-", for: .normal)
-        $0.setTitleColor(.black, for: .normal)
+        $0.setImage(.iconMinus, for: .normal)
+        $0.tintColor = .black
     }
     
     // MARK: - Init
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
+        self.backgroundColor = .clear
         
         setupViews()
-        
-        // Add corner radius to contentView
-        contentView.layer.cornerRadius = 10
-        contentView.layer.masksToBounds = true
     }
     
     required init?(coder: NSCoder) {
@@ -46,33 +56,39 @@ class DrankAlcoholTableViewCell: UITableViewCell {
     
     // MARK: - Setup Layout
     private func setupViews() {
+        contentView.addSubview(backView)
         contentView.addSubview(alcoholImageView)
         contentView.addSubview(alcoholNameLabel)
         contentView.addSubview(sliderValueLabel)
         contentView.addSubview(deleteButton)
         
+        backView.snp.makeConstraints {
+            $0.verticalEdges.equalToSuperview().inset(10)
+            $0.horizontalEdges.equalToSuperview()
+        }
+        
         alcoholImageView.snp.makeConstraints {
-            $0.left.equalToSuperview().offset(16)
+            $0.left.equalToSuperview().offset(10)
             $0.centerY.equalToSuperview()
-            $0.width.height.equalTo(72) // Adjust size as needed
+            $0.width.height.equalTo(72)
         }
         
         alcoholNameLabel.snp.makeConstraints {
             $0.left.equalTo(alcoholImageView.snp.right).offset(24)
             $0.centerY.equalToSuperview()
-            $0.width.lessThanOrEqualTo(100) // Adjust width as needed
+            $0.width.lessThanOrEqualTo(100)
         }
         
         sliderValueLabel.snp.makeConstraints {
             $0.right.equalTo(deleteButton.snp.left).offset(-50)
             $0.centerY.equalToSuperview()
-            $0.width.lessThanOrEqualTo(60) // Adjust width as needed
+            $0.width.lessThanOrEqualTo(60)
         }
         
         deleteButton.snp.makeConstraints {
             $0.right.equalToSuperview().inset(22)
             $0.centerY.equalToSuperview()
-            $0.width.equalTo(50) // Adjust size as needed
+            $0.width.equalTo(24)
         }
     }
 }

@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import Alamofire
 
 struct AlcoholItem {
     let imageName: String  // 이미지 이름
@@ -135,6 +136,59 @@ class DrinkingInfoViewController: UIViewController, UICollectionViewDelegate {
         print("현재 활성화된 아이템:", item.name, item.percentage) // 디버깅용 출력
     }
     
+    private func fetchDrinkCapacity(drinkItemId: Int) {
+        guard let authToken = KeychainService.get(key: UserInfoKey.jwt.rawValue) else {
+            print("인증 토큰을 가져올 수 없습니다.")
+            return
+        }
+        
+        let headers: HTTPHeaders = [
+            "Content-Type": "application/json",
+            "Authorization": "Bearer \(authToken)"
+        ]
+        
+        let url = "\(K.String.puppymodeLink)/drink/capacity/\(drinkItemId)"
+        
+        AF.request(url,
+                   method: .get,
+                   headers: headers)
+        .responseDecodable(of: DrinkCapacityResponse.self) { response in
+            switch response.result {
+            case .success(let data):
+                if data.code == "COMMON200" {
+                    print("술 정보 조회 성공!")
+                    
+                    // 뷰 업데이트
+                    DispatchQueue.main.async {
+                        self.updateDrinkInfoView(with: data.result)
+                    }
+                } else {
+                    print("응답 코드가 COMMON200이 아닙니다.")
+                }
+            case .failure(let error):
+                print("API 요청 실패:", error.localizedDescription)
+            }
+        }
+    }
+
+    
+    private func updateDrinkInfoView(with result: DrinkCapacityResult?) {
+        guard let result = result else { return }
+        
+        // 이름, 도수 업데이트
+        drinkingInfoView.alcoholNameLabel.text = result.drinkItemName
+        drinkingInfoView.alcoholPercentageLabel.text = "\(result.alcoholPercentage)%"
+        
+        // ProgressBar 업데이트
+        DrinkingProgressBar.configure(
+            progress: Float(result.safetyValue) / Float(result.maxValue),
+            safeText: "\(result.safetyValue)ml",
+            dangerText: "\(result.maxValue)ml"
+        )
+    }
+
+
+    
 }
 
 extension DrinkingInfoViewController: UIScrollViewDelegate {
@@ -163,11 +217,15 @@ extension DrinkingInfoViewController: UIScrollViewDelegate {
             cell.transform = CGAffineTransform(scaleX: scale, y: scale)
         }
         
-        // Update labels based on the closest cell to the center
+        // Update labels and fetch drink capacity based on the closest cell to the center
         if let closestIndex = closestIndex {
             updateLabels(forItemAt: closestIndex)
+            
+            // Fetch drink capacity for the selected item (drinkItemId는 데이터에 따라 설정)
+            fetchDrinkCapacity(drinkItemId: closestIndex + 1) // 예시로 drinkItemId를 index + 1로 설정
         }
     }
+
     
     func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset targetContentOffsetPointer: UnsafeMutablePointer<CGPoint>) {
         guard let collectionView = scrollView as? UICollectionView else { return }

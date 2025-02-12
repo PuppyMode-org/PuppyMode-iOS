@@ -46,8 +46,6 @@ extension RevokeViewController {
         let kakaoAccessToken = KeychainService.get(key:  KakaoAPIKey.kakaoAccessToken.rawValue ) ?? "none"
         let jwt = KeychainService.get(key: UserInfoKey.jwt.rawValue)
         
-        print("kakaoAccessToken \(kakaoAccessToken)")
-        
         AF.request(K.String.puppymodeLink + "/withdraw",
                    method: .delete,
                    parameters: ["accessToken": kakaoAccessToken],
@@ -62,12 +60,13 @@ extension RevokeViewController {
             
         }
         
-        _ = KeychainService.delete(key: KakaoAPIKey.kakaoUserID.rawValue)
-        _ = KeychainService.delete(key: AppleAPIKey.appleUserID.rawValue)
-        _ = UserInfoService.deleteAllUserInfoFromKeychainService()
-        _ = KakaoLoginService.deleteAllKakaoToken()
+        _ = UserInfoService.deleteAllKeys()
         self.kakaoRevoke()
         RootViewControllerService.toLoginViewController()
+    }
+    
+    public func setPuppyInfo(puppy: PuppyInfoResult) {
+        self.revokeView.configure(puppy: puppy)
     }
         
     private func kakaoRevoke() {
@@ -75,7 +74,6 @@ extension RevokeViewController {
             if let error = error {
                 print(error)
             } else {
-                self.changeRootToLoginViewController()
                 print("unlink() success.")
             }
         }
@@ -83,10 +81,5 @@ extension RevokeViewController {
     
     private func appleRevoke() {
         // Apple 서버에서 탈퇴하기
-    }
-    private func changeRootToLoginViewController() {
-        let baseViewController = LoginViewController()
-        let sceneDelegate = UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate
-        sceneDelegate?.changeRootViewController(baseViewController, animated: false)
     }
 }

@@ -21,7 +21,7 @@ class KakaoLoginService {
             if let error = error {
                 print("UserApi.shared.loginWithKakaoAccount failed: ", error)
             } else {
-                // self.saveKakaoUserID()
+                self.saveKakaoUserID()
                 if let kakaoAccessToekn = oauthToken?.accessToken, let kakaoRefreshToken = oauthToken?.refreshToken {
                     print("kakaoAccessToken \(kakaoAccessToekn)")
                     print("kakaoRefreshToken \(kakaoRefreshToken)")
@@ -48,13 +48,10 @@ class KakaoLoginService {
                 if UserInfoService.addUserInfoToKeychainService(userInfo: loginResponse.result) {
                     if let jwt = KeychainService.get(key: UserInfoKey.jwt.rawValue ) {
                         print("JWT: \(jwt)")
-                        // print("Kakao Access Token: \(kakaoAccessToken)")
                     }
                     if loginResponse.result.userInfo.isNewUser {
-                        // print("새로운 회원")
                         RootViewControllerService.toPuppySelectionViewController()
                     } else {
-                        // print("기존 회원")
                         RootViewControllerService.toBaseViewController()
                     }
                 }
@@ -71,7 +68,8 @@ class KakaoLoginService {
     
     static func deleteAllKakaoToken() -> Bool {
         return  KeychainService.delete(key: KakaoAPIKey.kakaoAccessToken.rawValue) &&
-                KeychainService.delete(key: KakaoAPIKey.kakaoRefreshToken.rawValue)
+                KeychainService.delete(key: KakaoAPIKey.kakaoRefreshToken.rawValue) &&
+                KeychainService.delete(key: KakaoAPIKey.kakaoUserID.rawValue)
     }
     
     static func saveKakaoUserID() {

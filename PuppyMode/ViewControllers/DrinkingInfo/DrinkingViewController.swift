@@ -11,6 +11,16 @@ import Alamofire
 class DrinkingViewController: UIViewController {
 
     private let drinkingView = DrinkingView()
+    private var appointmentId: Int // 전달받은 appointmentId 저장
+    
+    init(appointmentId: Int) {
+        self.appointmentId = appointmentId
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 
     override func loadView() {
         self.view = drinkingView
@@ -147,84 +157,92 @@ class DrinkingViewController: UIViewController {
         pickerContainerView.removeFromSuperview()
         
         // API 요청 보내기
-        sendRescheduleRequest(dateTime: formattedDateTime)
+        sendRescheduleRequest(appointmentId: appointmentId, dateTime: formattedDateTime)
     }
     
-    //MARK: Connect Api
+    // MARK: Connect Api
     // 술 약속 및 음주 상태 조회하기 API
     private func checkDrinkingStatus() {
-        let fcmToken = KeychainService.get(key: UserInfoKey.jwt.rawValue) ?? ""
+        let authToken = KeychainService.get(key: UserInfoKey.jwt.rawValue) ?? ""
         
         let headers: HTTPHeaders = [
             "Content-Type": "application/json",
-            "Authorization": "Bearer \(fcmToken)"
+            "Authorization": "Bearer \(authToken)"
         ]
         
-        AF.request(K.String.puppymodeLink + "/appointments/status",
+        let url = "\(K.String.puppymodeLink)/appointments/\(appointmentId)/status" // appointmentId는 전달받은 값
+        
+        AF.request(url,
                    method: .get,
                    headers: headers)
-        .responseDecodable(of: GetAppointmentStatusResponse.self) { response in
+        .responseDecodable(of: CheckDrinkingStatusResponse.self) { response in
             switch response.result {
             case .success(let data):
                 if data.code == "SUCCESS_GET_APPOINTMENT_STATUS" {
-                    if data.result?.isDrinking == true {
-                        print("현재 음주 상태입니다.")
-                        // 화면 유지
-                    } else {
-                        print("음주 상태가 아닙니다. 이전 화면으로 돌아갑니다.")
-                        DispatchQueue.main.async {
-                            self.dismiss(animated: true, completion: nil)
-                        }
+                    print("술 약속 및 음주 상태 조회 성공!")
+                    
+                    // 뷰 업데이트
+                    DispatchQueue.main.async {
+                        self.updateDrinkingView(with: data.result)
                     }
                 } else {
                     print("응답 코드가 SUCCESS_GET_APPOINTMENT_STATUS가 아닙니다.")
-                    DispatchQueue.main.async {
-                        self.dismiss(animated: true, completion: nil)
-                    }
                 }
             case .failure(let error):
                 print("API 요청 실패:", error.localizedDescription)
-                DispatchQueue.main.async {
-                    self.dismiss(animated: true, completion: nil)
-                }
             }
         }
     }
     
+    private func updateDrinkingView(with result: DrinkingStatusResult?) {
+        guard let result = result else { return }
+        
+        // progressNameLabel 업데이트
+        drinkingView.progressNameLabel.text = "\(result.puppyName)가 지켜보고 있어요!"
+        
+        // progressTimeLabel 업데이트
+        drinkingView.progressTimeLabel.text = "\(result.drinkingHours)시간 째 술마시는 중"
+    }
+    
     // 술 약속 미루기 API
-    private func sendRescheduleRequest(dateTime: String) {
-        let fcmToken = KeychainService.get(key: UserInfoKey.jwt.rawValue) ?? ""
+    private func sendRescheduleRequest(appointmentId: Int, dateTime: String) {
+        guard let authToken = KeychainService.get(key: UserInfoKey.jwt.rawValue) else {
+            print("인증 토큰을 가져올 수 없습니다.")
+            return
+        }
         
         let headers: HTTPHeaders = [
             "Content-Type": "application/json",
-            "Authorization": "Bearer \(fcmToken)"
+            "Authorization": "Bearer \(authToken)"
         ]
         
         let parameters: [String: Any] = [
             "dateTime": dateTime
         ]
         
-        AF.request(K.String.puppymodeLink + "/appointments/reschedule",
-                   method: .put,
+        let url = "\(K.String.puppymodeLink)/appointments/\(appointmentId)"
+        
+        AF.request(url,
+                   method: .patch,
                    parameters: parameters,
                    encoding: JSONEncoding.default,
                    headers: headers)
-        .responseDecodable(of: RescheduleAppointmentResponse.self) { response in
-            switch response.result {
-            case .success(let data):
-                if data.code == "SUCCESS_PUT_APPOINTMENT_RESCHEDULED" {
-                    print("술 약속 수정 성공!")
-                    
-                    // 모달 창 표시
-                    self.showSuccessModal(message: data.result?.message ?? "술 약속이 성공적으로 수정되었습니다.")
-                } else {
-                    print("응답 코드가 SUCCESS_PUT_APPOINTMENT_RESCHEDULED가 아닙니다.")
-                    self.showSuccessModal(message: data.result?.message ?? "술 약속 수정에 실패하였습니다.")
+            .responseDecodable(of: RescheduleAppointmentResponse.self) { response in
+                switch response.result {
+                case .success(let data):
+                    if data.code == "SUCCESS_PUT_APPOINTMENT_RESCHEDULED" {
+                        print("술 약속 수정 성공!")
+                        
+                        // 모달 창 표시
+                        self.showSuccessModal(message: data.result?.message ?? "술 약속이 성공적으로 수정되었습니다.")
+                    } else {
+                        print("응답 코드가 SUCCESS_PUT_APPOINTMENT_RESCHEDULED가 아닙니다.")
+                        self.showSuccessModal(message: data.result?.message ?? "술 약속 수정에 실패하였습니다.")
+                    }
+                case .failure(let error):
+                    print("API 요청 실패:", error.localizedDescription)
                 }
-            case .failure(let error):
-                print("API 요청 실패:", error.localizedDescription)
             }
-        }
     }
 
     // 술 약속 미루기 결과 모달 창
@@ -242,15 +260,28 @@ class DrinkingViewController: UIViewController {
     @objc private func didTapEndButton() {
         print("End button tapped!")
         
-        let fcmToken = KeychainService.get(key: UserInfoKey.jwt.rawValue) ?? ""
+        guard let authToken = KeychainService.get(key: UserInfoKey.jwt.rawValue) else {
+            print("인증 토큰을 가져올 수 없습니다.")
+            return
+        }
         
         let headers: HTTPHeaders = [
             "Content-Type": "application/json",
-            "Authorization": "Bearer \(fcmToken)"
+            "Authorization": "Bearer \(authToken)"
         ]
         
-        AF.request(K.String.puppymodeLink + "/appointments/end",
-                   method: .post,
+        // PATCH 요청 URL
+        let url = "\(K.String.puppymodeLink)/appointments/\(appointmentId)/status"
+        
+        // 요청 본문 (음주 상태 종료)
+        let parameters: [String: Any] = [
+            "status": "COMPLETED" // 상태를 COMPLETED로 변경
+        ]
+        
+        AF.request(url,
+                   method: .patch,
+                   parameters: parameters,
+                   encoding: JSONEncoding.default,
                    headers: headers)
         .responseDecodable(of: EndAppointmentResponse.self) { response in
             switch response.result {
@@ -277,4 +308,5 @@ class DrinkingViewController: UIViewController {
             }
         }
     }
+    
 }

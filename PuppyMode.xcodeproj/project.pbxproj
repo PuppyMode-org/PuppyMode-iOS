@@ -11,6 +11,7 @@
 		23A04E452D2C3752008473B1 /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 23A04E442D2C3752008473B1 /* SnapKit */; };
 		23A04E482D2C375D008473B1 /* Then in Frameworks */ = {isa = PBXBuildFile; productRef = 23A04E472D2C375D008473B1 /* Then */; };
 		23AC786D2D4C4DB00021BB86 /* ToosieSlide in Frameworks */ = {isa = PBXBuildFile; productRef = 23AC786C2D4C4DB00021BB86 /* ToosieSlide */; };
+		6311AD5A2D586BE4004F3A92 /* SDWebImageSVGNativeCoder in Frameworks */ = {isa = PBXBuildFile; productRef = 6311AD592D586BE4004F3A92 /* SDWebImageSVGNativeCoder */; };
 		638828A72D464CC2007288E4 /* KakaoSDKFriend in Frameworks */ = {isa = PBXBuildFile; productRef = 638828A62D464CC2007288E4 /* KakaoSDKFriend */; };
 		638828A92D464CC2007288E4 /* KakaoSDKFriendCore in Frameworks */ = {isa = PBXBuildFile; productRef = 638828A82D464CC2007288E4 /* KakaoSDKFriendCore */; };
 		638828AB2D464CC2007288E4 /* KakaoSDKTalk in Frameworks */ = {isa = PBXBuildFile; productRef = 638828AA2D464CC2007288E4 /* KakaoSDKTalk */; };
@@ -22,6 +23,9 @@
 		63BFBBC42D373EA0000AA549 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 63BFBBC32D373EA0000AA549 /* Alamofire */; };
 		9740B2832D5A6E4C00F5BCD2 /* SVGKit in Frameworks */ = {isa = PBXBuildFile; productRef = 9740B2822D5A6E4C00F5BCD2 /* SVGKit */; };
 		9740B2852D5A6E4C00F5BCD2 /* SVGKitSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 9740B2842D5A6E4C00F5BCD2 /* SVGKitSwift */; };
+
+		63D942792D56231500CCE231 /* SDWebImageSVGKitPlugin in Frameworks */ = {isa = PBXBuildFile; productRef = 63D942782D56231500CCE231 /* SDWebImageSVGKitPlugin */; };
+
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -56,9 +60,11 @@
 			files = (
 				63BFBBC42D373EA0000AA549 /* Alamofire in Frameworks */,
 				23A04E452D2C3752008473B1 /* SnapKit in Frameworks */,
+				6311AD5A2D586BE4004F3A92 /* SDWebImageSVGNativeCoder in Frameworks */,
 				639795792D4325EE00947ACA /* FirebaseMessaging in Frameworks */,
 				2324D6C42D2F156800C38607 /* FSCalendar in Frameworks */,
 				6397957E2D43260D00947ACA /* KakaoSDKCommon in Frameworks */,
+				63D942792D56231500CCE231 /* SDWebImageSVGKitPlugin in Frameworks */,
 				638828A72D464CC2007288E4 /* KakaoSDKFriend in Frameworks */,
 				638828AB2D464CC2007288E4 /* KakaoSDKTalk in Frameworks */,
 				639795772D4325EE00947ACA /* FirebaseCore in Frameworks */,
@@ -126,6 +132,8 @@
 				23AC786C2D4C4DB00021BB86 /* ToosieSlide */,
 				9740B2822D5A6E4C00F5BCD2 /* SVGKit */,
 				9740B2842D5A6E4C00F5BCD2 /* SVGKitSwift */,
+				63D942782D56231500CCE231 /* SDWebImageSVGKitPlugin */,
+				6311AD592D586BE4004F3A92 /* SDWebImageSVGNativeCoder */,
 			);
 			productName = PuppyMode;
 			productReference = 23A04E1C2D2C0972008473B1 /* PuppyMode.app */;
@@ -164,6 +172,8 @@
 				6397957A2D43260C00947ACA /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */,
 				23AC786B2D4C4DB00021BB86 /* XCRemoteSwiftPackageReference "ToosieSlide" */,
 				9740B2812D5A6E4C00F5BCD2 /* XCRemoteSwiftPackageReference "SVGKit" */,
+				63D942772D56231500CCE231 /* XCRemoteSwiftPackageReference "SDWebImageSVGKitPlugin" */,
+				6311AD582D586BE4004F3A92 /* XCRemoteSwiftPackageReference "SDWebImageSVGNativeCoder" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 23A04E1D2D2C0972008473B1 /* Products */;
@@ -435,6 +445,14 @@
 				minimumVersion = 1.1.1;
 			};
 		};
+		6311AD582D586BE4004F3A92 /* XCRemoteSwiftPackageReference "SDWebImageSVGNativeCoder" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SDWebImage/SDWebImageSVGNativeCoder.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.2.0;
+			};
+		};
 		639795752D4325EE00947ACA /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
@@ -465,6 +483,12 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 3.0.0;
+		63D942772D56231500CCE231 /* XCRemoteSwiftPackageReference "SDWebImageSVGKitPlugin" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SDWebImage/SDWebImageSVGKitPlugin.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.4.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -489,6 +513,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 23AC786B2D4C4DB00021BB86 /* XCRemoteSwiftPackageReference "ToosieSlide" */;
 			productName = ToosieSlide;
+		};
+		6311AD592D586BE4004F3A92 /* SDWebImageSVGNativeCoder */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6311AD582D586BE4004F3A92 /* XCRemoteSwiftPackageReference "SDWebImageSVGNativeCoder" */;
+			productName = SDWebImageSVGNativeCoder;
 		};
 		638828A62D464CC2007288E4 /* KakaoSDKFriend */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -544,6 +573,10 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 9740B2812D5A6E4C00F5BCD2 /* XCRemoteSwiftPackageReference "SVGKit" */;
 			productName = SVGKitSwift;
+		63D942782D56231500CCE231 /* SDWebImageSVGKitPlugin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 63D942772D56231500CCE231 /* XCRemoteSwiftPackageReference "SDWebImageSVGKitPlugin" */;
+			productName = SDWebImageSVGKitPlugin;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

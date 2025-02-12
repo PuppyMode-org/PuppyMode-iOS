@@ -4,6 +4,7 @@ import KakaoSDKAuth
 import FirebaseCore
 import UserNotifications
 import Firebase
+import SDWebImageSVGNativeCoder
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -31,6 +32,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         // 파이어베이스 Meesaging 설정
         Messaging.messaging().delegate = self
+        
+        // MARK: Add SVG Coder
+        let svgCoder = SDImageSVGNativeCoder.shared
+        SDImageCodersManager.shared.addCoder(svgCoder)
         
         return true
     }
@@ -63,7 +68,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
     // 백그라운드에서 푸시 알림을 탭했을 때 실행
     func application(_ application: UIApplication,
                      didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
-        print("APNS token: \(deviceToken)")
+        // print("APNS token: \(deviceToken)")
         Messaging.messaging().apnsToken = deviceToken
     }
     
@@ -77,7 +82,7 @@ extension AppDelegate: MessagingDelegate {
     // 파이어베이스 MessagingDelegate 설정
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
         
-        if let fcm = KeychainService.get(key: FCMTokenKey.fcm.rawValue) {
+        if let _ = KeychainService.get(key: FCMTokenKey.fcm.rawValue) {
             // print("Token already saved \(fcm)")
             return
         }

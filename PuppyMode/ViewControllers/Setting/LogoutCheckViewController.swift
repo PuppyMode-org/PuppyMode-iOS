@@ -24,7 +24,8 @@ class LogoutCheckViewController: UIViewController {
     
     @objc
     private func logout() {
-        
+        _ = UserInfoService.deleteAllKeys()
+        RootViewControllerService.toLoginViewController()
     }
     
     @objc
@@ -32,5 +33,4 @@ class LogoutCheckViewController: UIViewController {
         dismiss(animated: true, completion: nil)
     }
     
-        
 }

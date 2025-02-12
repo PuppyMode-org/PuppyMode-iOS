@@ -132,7 +132,7 @@ class PuppySelectionView: UIView {
             make.width.equalTo(buttonsStackFrame).multipliedBy(0.428)
             make.height.equalTo(buttonsStackFrame).multipliedBy(0.444)
         }
-
+        
     }
     
     private func addComponentsToShowAfterFetch() {
@@ -186,7 +186,7 @@ class PuppySelectionView: UIView {
         // 선택된 카드 중앙으로 이동 및 크기 조정
         let translateX = centerX - sender.center.x
         let translateY = centerY - sender.center.y
-                
+        
         self.bringSubviewToFront(dimView)
         self.bringSubviewToFront(sender)
         
@@ -201,9 +201,9 @@ class PuppySelectionView: UIView {
         } completion: { _ in
             // dim 효과 완료 후 카드 확대 애니메이션
             UIView.animate(withDuration: 1.0, // 애니메이션 시간을 1초로 증가
-                          delay: 0,
-                          usingSpringWithDamping: 0.7, // 스프링 효과를 더 부드럽게
-                          initialSpringVelocity: 0.3) { // 초기 속도를 낮춤
+                           delay: 0,
+                           usingSpringWithDamping: 0.7, // 스프링 효과를 더 부드럽게
+                           initialSpringVelocity: 0.3) { // 초기 속도를 낮춤
                 sender.transform = CGAffineTransform.identity
                     .translatedBy(x: translateX, y: translateY)
                     .scaledBy(x: scaleX, y: scaleY)
@@ -222,66 +222,65 @@ class PuppySelectionView: UIView {
                         self.characterNameLabel.text = "포메라니안"
                         self.subTitleLabel.text = "Pomeranian"
                         sender.puppyImage.image = .babyPomeranian
-                    }
-                    
-                    UIView.transition(with: sender, duration: 0.5, options: .transitionFlipFromRight , animations: nil ) { _ in
-                        UIView.animate(withDuration: 0.8) {
-                            self.dimView.backgroundColor = .white
-                            self.dimView.alpha = 1
-                            sender.isEnabled = false
-                            
-                            self.characterNameLabel.isHidden = false
-                            self.subTitleLabel.isHidden = false
-                            self.startButton.isHidden = false
-                            self.bringSubviewToFront(self.characterNameLabel)
-                            self.bringSubviewToFront(self.subTitleLabel)
-                            self.bringSubviewToFront(self.startButton)
+                    }   
+                        UIView.transition(with: sender, duration: 0.5, options: .transitionFlipFromRight , animations: nil ) { _ in
+                            UIView.animate(withDuration: 0.8) {
+                                self.dimView.backgroundColor = .white
+                                self.dimView.alpha = 1
+                                sender.isEnabled = false
+                                
+                                self.characterNameLabel.isHidden = false
+                                self.subTitleLabel.isHidden = false
+                                self.startButton.isHidden = false
+                                self.bringSubviewToFront(self.characterNameLabel)
+                                self.bringSubviewToFront(self.subTitleLabel)
+                                self.bringSubviewToFront(self.startButton)
+                            }
                         }
                     }
                 }
             }
         }
-    }
-    
-    private func convertToPuppyType(str: String) -> PuppyEnum? {
-        switch str {
-        case "포메라니안":
-            return .pomeranian
-        case "웰시코기":
-            return .welshCorgi
-        case "비숑 프리제":
-            return .bichon
-        default:
-            print("No such Puppy \(str)")
-            return nil
+        
+        private func convertToPuppyType(str: String) -> PuppyEnum? {
+            switch str {
+            case "포메라니안":
+                return .pomeranian
+            case "웰시코기":
+                return .welshCorgi
+            case "비숑 프리제":
+                return .bichon
+            default:
+                print("No such Puppy \(str)")
+                return nil
+            }
         }
+        
+        //    private func deletePuppy() {
+        //        let headers: HTTPHeaders = [
+        //            "accept": "*/*",
+        //            "Authorization": "Bearer \(KeychainService.get(key: UserInfoKey.jwt.rawValue)!)"
+        //        ]
+        //
+        //        AF.request(K.String.puppymodeLink + "/puppies",
+        //                   method: .delete,
+        //                   headers: headers)
+        //            .responseDecodable(of: PuppyDeletionResponse.self)  { [weak self] response in
+        //
+        //                guard let _ = self else { return }
+        //
+        //                switch response.result {
+        //                case .success(let response) :
+        //                    print(response.result)
+        //                case .failure(let error) :
+        //                    print("Network Error: \(error.localizedDescription)")
+        //                }
+        //            }
+        //    }
+        
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
     }
-    
-//    private func deletePuppy() {
-//        let headers: HTTPHeaders = [
-//            "accept": "*/*",
-//            "Authorization": "Bearer \(KeychainService.get(key: UserInfoKey.jwt.rawValue)!)"
-//        ]
-//        
-//        AF.request(K.String.puppymodeLink + "/puppies",
-//                   method: .delete,
-//                   headers: headers)
-//            .responseDecodable(of: PuppyDeletionResponse.self)  { [weak self] response in
-//                
-//                guard let _ = self else { return }
-//                
-//                switch response.result {
-//                case .success(let response) :
-//                    print(response.result)
-//                case .failure(let error) :
-//                    print("Network Error: \(error.localizedDescription)")
-//                }
-//            }
-//    }
-
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-}

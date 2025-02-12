@@ -10,23 +10,28 @@ import UIKit
 class HangoverCollectionViewCell: UICollectionViewCell {
     static let identifier = "HangoverCollectionViewCell"
     
-    // MARK: - layout
-    // 이미지
-    public let hangoverImage = UIImageView().then {
-        $0.backgroundColor = .main
+    // MARK: - Properties
+    var isCellSelected: Bool = false {
+        didSet {
+            updateAlpha()
+        }
     }
     
-    // 텍스트
+    // MARK: - Layout
+    public let hangoverImage = UIImageView().then {
+        $0.backgroundColor = .main
+        $0.alpha = 0.5
+    }
+    
     public let hangoverLabel = UILabel().then {
         $0.textColor = UIColor(red: 0.235, green: 0.235, blue: 0.235, alpha: 1)
         $0.font = UIFont(name: "NotoSansKR-Medium", size: 16)
+        $0.alpha = 0.5
     }
     
-    
-    // MARK: - init
+    // MARK: - Init
     override init(frame: CGRect) {
         super.init(frame: frame)
-        
         setView()
     }
     
@@ -34,14 +39,14 @@ class HangoverCollectionViewCell: UICollectionViewCell {
         fatalError()
     }
     
-    // MARK: - function
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        isCellSelected = false
+    }
+    
+    // MARK: - Functions
     private func setView() {
-        [
-            hangoverImage,
-            hangoverLabel
-        ].forEach {
-            addSubview($0)
-        }
+        [hangoverImage, hangoverLabel].forEach { addSubview($0) }
         
         hangoverImage.snp.makeConstraints {
             $0.top.equalToSuperview()
@@ -53,5 +58,10 @@ class HangoverCollectionViewCell: UICollectionViewCell {
             $0.top.equalTo(hangoverImage.snp.bottom)
             $0.centerX.equalToSuperview()
         }
+    }
+    
+    public func updateAlpha() {
+        self.hangoverImage.alpha = isCellSelected ? 1.0 : 0.5
+        self.hangoverLabel.alpha = isCellSelected ? 1.0 : 0.5
     }
 }

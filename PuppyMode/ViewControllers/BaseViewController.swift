@@ -28,8 +28,9 @@ class BaseViewController: UITabBarController {
         let socialViewController = SocialViewController()
         return UINavigationController(rootViewController: socialViewController)
     }()
-
+    
     private let calendarVC = UINavigationController(rootViewController: CalendarViewController())
+    
     private lazy var settingVC: UINavigationController = {
         let settingViewController = SettingViewController()
         settingViewController.setToggle()

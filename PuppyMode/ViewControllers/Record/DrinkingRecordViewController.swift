@@ -6,10 +6,21 @@
 //
 
 import UIKit
+import Alamofire
 
 class DrinkingRecordViewController: UIViewController {
     private let drinkingView = DrinkingRecordView()
     private var addedItems: [DrankAlcoholModel] = []
+    private var hangoverOptions: [Int]
+    
+    init(hangoverOptions: [Int]) {
+        self.hangoverOptions = hangoverOptions
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError()
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -19,7 +30,7 @@ class DrinkingRecordViewController: UIViewController {
         drinkingView.tableView.dataSource = self
         drinkingView.tableView.delegate = self
         
-        drinkingView.tableView.separatorStyle = .none // Remove default separators
+        drinkingView.tableView.separatorStyle = .none
         
         setAction()
     }
@@ -31,6 +42,16 @@ class DrinkingRecordViewController: UIViewController {
         drinkingView.completeButton.addTarget(self, action: #selector(completeButtonTapped), for: .touchUpInside)
     }
     
+    func addNewItem(_ item: DrankAlcoholModel) {
+        print("📌 새로운 아이템 추가: \(item.name), \(item.sliderValue) \(item.unit)")
+        addedItems.append(item)
+
+        DispatchQueue.main.async {
+            self.drinkingView.tableView.reloadData()
+            self.drinkingView.updateTableViewHeight()
+        }
+    }
+
     // MARK: - action
     @objc
     private func backButtonTapped() {
@@ -40,22 +61,19 @@ class DrinkingRecordViewController: UIViewController {
     @objc private func plusButtonTapped() {
         let alcoholVC = AlcoholViewController()
         
-        // Pass a closure to handle the selected alcohol item
         alcoholVC.onAlcoholSelected = { [weak self] selectedItem in
             guard let self = self else { return }
             
-            // Navigate to IntakeViewController with the selected alcohol information
             let intakeVC = IntakeViewController(
                 alcoholName: selectedItem.name,
-                alcoholImage: UIImage(named: selectedItem.image) // Use the image property from the model
+                alcoholImage: UIImage(named: selectedItem.image),
+                drinkCategoryId: selectedItem.drinkCategoryId,
+                drinkItemId: selectedItem.drinkItemId
             )
             
             intakeVC.onItemAdded = { newItem in
-                // Add the new item to the list and reload the table view
                 self.addedItems.append(newItem)
                 self.drinkingView.tableView.reloadData()
-                
-                // Update the table view's height dynamically
                 self.drinkingView.updateTableViewHeight()
             }
             
@@ -64,31 +82,86 @@ class DrinkingRecordViewController: UIViewController {
         
         navigationController?.pushViewController(alcoholVC, animated: true)
     }
-    
-    
+
     @objc
     private func completeButtonTapped() {
-        let recordCompleteVC = RecordCompleteViewController()
-        navigationController?.pushViewController(recordCompleteVC, animated: true)
+        print("✅ 음주 기록 완료 버튼 클릭됨")
+
+        let alcoholTolerance = addedItems.map { item in
+            return [
+                "drinkCategoryId": item.drinkCategoryId,
+                "drinkItemId": item.drinkItemId,
+                "value": item.sliderValue,
+                "unit": item.unit
+            ]
+        }
+        
+        let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date())!
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let drinkDate = dateFormatter.string(from: yesterday)
+
+        let parameters: [String: Any] = [
+            "drinkDate": drinkDate,
+            "hangoverOptions": hangoverOptions,
+            "alcoholTolerance": alcoholTolerance
+        ]
+        
+        guard let jwt = KeychainService.get(key: UserInfoKey.jwt.rawValue) else {
+            print("JWT Token not found")
+            return
+        }
+        
+        let headers: HTTPHeaders = [
+            "accept": "*/*",
+            "Authorization": "Bearer \(jwt)",
+            "Content-Type": "application/json"
+        ]
+
+        let url = "https://puppy-mode.site/drinks/record"
+
+        AF.request(url, method: .post, parameters: parameters, encoding: JSONEncoding.default, headers: headers)
+            .validate()
+            .responseData { response in
+                switch response.result {
+                case .success(let data):
+                    if let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+                       let result = json["result"] as? [String: Any] {
+
+                        let resultMessage = result["message"] as? String ?? "주량을 잘 조절했어요!"
+                        let feedImageUrl = result["feedImageUrl"] as? String ?? ""
+                        let feedType = result["feedType"] as? String ?? ""
+                        let puppyLevel = result["puppyLevel"] as? Int ?? 1
+                        let puppyLevelName = result["puppyLevelName"] as? String ?? "포메라니안"
+                        let puppyPercent = result["puppyPercent"] as? Int ?? 0
+
+                        let recordCompleteVC = RecordCompleteViewController(
+                            resultMessage: resultMessage,
+                            feedImageUrl: feedImageUrl,
+                            feedType: feedType,
+                            puppyLevel: puppyLevel,
+                            puppyLevelName: puppyLevelName,
+                            puppyPercent: puppyPercent
+                        )
+
+                        self.navigationController?.pushViewController(recordCompleteVC, animated: true)
+                    }
+                case .failure(let error):
+                    print("요청 실패: \(error.localizedDescription)")
+                }
+            }
     }
     
     @objc private func deleteButtonTapped(_ sender: UIButton) {
         let rowIndex = sender.tag
-        
-        // Remove item from data source
         addedItems.remove(at: rowIndex)
-        
-        // Update table view with animation
         drinkingView.tableView.deleteRows(at: [IndexPath(row: rowIndex, section: 0)], with: .automatic)
-        
-        // Update table view height dynamically if needed
         drinkingView.updateTableViewHeight()
     }
-
 }
 
-// MARK: - UITableViewDataSource
-extension DrinkingRecordViewController: UITableViewDataSource {
+// MARK: - extension
+extension DrinkingRecordViewController: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return addedItems.count
     }
@@ -99,48 +172,18 @@ extension DrinkingRecordViewController: UITableViewDataSource {
         }
         
         let item = addedItems[indexPath.row]
+        cell.alcoholImageView.image = UIImage(named: "soju_bottle")
+        cell.alcoholNameLabel.text = item.name
+        cell.sliderValueLabel.text = "\(item.sliderValue) \(item.isBottleMode ? "병" : "잔")"
         
-        // Configure the cell with data from DrankAlcoholModel
-        cell.alcoholImageView.image = UIImage(named: "soju_bottle") // Replace with actual image logic if needed
-        cell.alcoholNameLabel.text = item.name // Alcohol name from model
-        cell.sliderValueLabel.text = "\(item.sliderValue) \(item.isBottleMode ? "병" : "잔")" // Quantity and mode
-        
-        // Handle delete button action
         cell.deleteButton.tag = indexPath.row
-        cell.deleteButton.addTarget(self, action: #selector(deleteButtonTapped(_:)), for: .touchUpInside)
+        cell.deleteButton.addTarget(self, action: #selector(deleteButtonTapped), for: .touchUpInside)
+        cell.selectionStyle = .none
         
         return cell
     }
     
-    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-        // Add spacing by adjusting the cell's content inset
-        let marginSpace: CGFloat = 10
-        
-        cell.contentView.frame = cell.contentView.frame.inset(by: UIEdgeInsets(top: marginSpace / 2,
-                                                                               left: marginSpace,
-                                                                               bottom: marginSpace / 2,
-                                                                               right: marginSpace))
-        
-        // Optional shadow effect for floating appearance
-        cell.layer.shadowColor = UIColor.black.cgColor
-        cell.layer.shadowOpacity = 0.1
-        cell.layer.shadowRadius = 10
-        cell.layer.shadowOffset = CGSize(width: 2, height: 2)
-        cell.layer.masksToBounds = false // Ensure shadow is visible outside bounds
-        
-        // Ensure corner radius is applied properly
-        if let customCell = cell as? DrankAlcoholTableViewCell {
-            customCell.contentView.layer.cornerRadius = 10
-            customCell.contentView.layer.masksToBounds = true
-            customCell.layer.cornerRadius = 10
-            customCell.layer.masksToBounds = false // Allow shadow outside bounds
-        }
-    }
-}
-
-// MARK: - UITableViewDelegate (Optional)
-extension DrinkingRecordViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 95 // Adjust row height as needed
+        return 115
     }
 }

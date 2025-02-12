@@ -1,5 +1,9 @@
 {
+<<<<<<< HEAD
   "originHash" : "9ad9ed13ba2e3fd7442e57a5267e919e5115af6d7ff08760c7e2a8c6c71f3118",
+=======
+  "originHash" : "15f09ab539113244eab544596c3ce73fc29baeec8981a8e16629f3b5ae691078",
+>>>>>>> origin
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -146,6 +150,33 @@
       }
     },
     {
+      "identity" : "sdwebimage",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/SDWebImage/SDWebImage.git",
+      "state" : {
+        "revision" : "10d06f6a33bafae8c164fbfd1f03391f6d4692b3",
+        "version" : "5.20.0"
+      }
+    },
+    {
+      "identity" : "sdwebimagesvgkitplugin",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/SDWebImage/SDWebImageSVGKitPlugin.git",
+      "state" : {
+        "revision" : "fb16805b772d9a1dfa31a7665f64a557f3b52781",
+        "version" : "1.4.0"
+      }
+    },
+    {
+      "identity" : "sdwebimagesvgnativecoder",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/SDWebImage/SDWebImageSVGNativeCoder.git",
+      "state" : {
+        "revision" : "09a6199bbc0899c90382e734bbe07850eae2aa83",
+        "version" : "0.2.0"
+      }
+    },
+    {
       "identity" : "snapkit",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/SnapKit/SnapKit",
@@ -157,13 +188,29 @@
     {
       "identity" : "svgkit",
       "kind" : "remoteSourceControl",
+<<<<<<< HEAD
       "location" : "https://github.com/SVGKit/SVGKit",
+=======
+      "location" : "https://github.com/SVGKit/SVGKit.git",
+>>>>>>> origin
       "state" : {
         "revision" : "58152b9f7c85eab239160b36ffdfd364aa43d666",
         "version" : "3.0.0"
       }
     },
     {
+<<<<<<< HEAD
+=======
+      "identity" : "svgnative-xcode",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/SDWebImage/svgnative-Xcode.git",
+      "state" : {
+        "revision" : "de560bb9f69bc89f4624855998148eb6e0bb8e60",
+        "version" : "0.1.0"
+      }
+    },
+    {
+>>>>>>> origin
       "identity" : "swift-log",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-log",

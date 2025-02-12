@@ -17,7 +17,7 @@ class SocialService {
     static let pageSize: Int = 10
     
     static func fetchGlobalRankData(completion: (() -> Void)? = nil) {
-        guard !isFetchingGlobalRankData else { print("fetching global data"); return }
+        guard !isFetchingGlobalRankData else { return }
         guard let jwt = KeychainService.get(key: UserInfoKey.jwt.rawValue) else { return }
         
         isFetchingGlobalRankData = true
@@ -26,60 +26,118 @@ class SocialService {
             method: .get,
             headers: ["accept": "*/*",
                       "Authorization": "Bearer \(jwt)"])
+        
         .responseDecodable(of: SocialRankResponse.self) { response in
+            defer {
+                isFetchingGlobalRankData = false
+                DispatchQueue.main.async { completion?() }
+            }
+            
             switch response.result {
             case .success(let response):
                 RankModel.globalRankData.append(contentsOf: response.result.rankings)
-                guard let _ = RankModel.myGlobalRank else {
-                    RankModel.myGlobalRank = response.result.currentUserRank
+                RankModel.myGlobalRank = response.result.currentUserRank
+                if !response.result.rankings.isEmpty { // 빈 페이지가 아니어야만 다음 페이지가 가능
                     globalRankPage += pageSize
-                    isFetchingGlobalRankData = false
-                    return
                 }
             case .failure(let error):
-                print(error)
+                print("Global fetch error: \(error)")
             }
-            // 인덱스 값 변화
-            globalRankPage += pageSize
-            isFetchingGlobalRankData = false
-        }
-        
-        DispatchQueue.main.async {
-            completion?()
         }
     }
     
     static func fetchFriendRankData(completion: (() -> Void)? = nil) {
-        guard !isFetchingFriendRankData else { print("fetching friend data"); return }
-        guard let jwt = KeychainService.get(key: UserInfoKey.jwt.rawValue) else { return }
-        guard let kakaoAccessToken = KeychainService.get(key: KakaoAPIKey.kakaoAccessToken.rawValue) else { return }
+        guard !isFetchingFriendRankData else { return }
+        guard let jwt = KeychainService.get(key: UserInfoKey.jwt.rawValue),
+              let kakaoAccessToken = KeychainService.get(key: KakaoAPIKey.kakaoAccessToken.rawValue) else { return }
         
         isFetchingFriendRankData = true
+        
         AF.request(
             K.String.puppymodeLink + "/rankings/friends?accessToken=\(kakaoAccessToken)&page=\(friendRankPage)&size=\(pageSize)",
             method: .get,
             headers: ["accept": "*/*",
                       "Authorization": "Bearer \(jwt)"])
         .responseDecodable(of: SocialRankResponse.self) { response in
+            defer {
+                isFetchingFriendRankData = false
+                DispatchQueue.main.async { completion?() } // 완료 핸들러 이동
+            }
+            
             switch response.result {
             case .success(let response):
+                
                 RankModel.friendsRankData.append(contentsOf: response.result.rankings)
-                guard let _ = RankModel.myRankInFriends else {
-                    RankModel.myRankInFriends = response.result.currentUserRank
+                RankModel.myRankInFriends = response.result.currentUserRank
+                
+                if !response.result.rankings.isEmpty { // 빈 페이지가 아니어야만 다음 페이지가 가능
                     friendRankPage += pageSize
-                    isFetchingFriendRankData = false
-                    return
                 }
+                
             case .failure(let error):
-                print(error)
+                print("Friends fetch error: \(error)")
             }
-            // 인덱스 값 변화
-            friendRankPage += pageSize
-            isFetchingFriendRankData = false
+        }
+    }
+    
+    static func updateRankData(completion: (() -> Void)? = nil) {
+        // 1. 0부터 현재 불러온 만큼 다시 전부 받는다. 0 ~ globalRankPage + pageSize
+        // 2. RankModel.globalRankData에 바뀐 점이 있으면 그 부분을 교체한다. (순위가 바뀔 수 도 있음. 그러면 그냥 다 바꿔버리면 안됨?)
+        // 3. 그냥 그럴거면, 친구랑 글로벌을 굳이 분리할 필요도 없어짐
+        // 4. 언제? 1. viewWillAppear() 2. segment 변동
+        // 5. global은 본인 내용도 업데이트 되어야함
+        
+        guard !isFetchingGlobalRankData else { return }
+        guard let jwt = KeychainService.get(key: UserInfoKey.jwt.rawValue) else { return }
+        guard let kakaoAccessToken = KeychainService.get(key: KakaoAPIKey.kakaoAccessToken.rawValue) else { return }
+        
+        isFetchingGlobalRankData = true
+        AF.request(
+            K.String.puppymodeLink + "/rankings/global?page=\(0)&size=\(globalRankPage + pageSize)",
+            method: .get,
+            headers: ["accept": "*/*",
+                      "Authorization": "Bearer \(jwt)"])
+        
+        .responseDecodable(of: SocialRankResponse.self) { response in
+            defer {
+                isFetchingGlobalRankData = false
+                DispatchQueue.main.async { completion?() }
+            }
+            
+            switch response.result {
+            case .success(let response):
+                RankModel.globalRankData = response.result.rankings
+                RankModel.myGlobalRank = response.result.currentUserRank
+            case .failure(let error):
+                print("Global fetch error: \(error)")
+            }
         }
         
-        DispatchQueue.main.async {
-            completion?()
+        isFetchingFriendRankData = true
+        AF.request(
+            K.String.puppymodeLink + "/rankings/friends?accessToken=\(kakaoAccessToken)&page=\(0)&size=\(friendRankPage + pageSize)",
+            method: .get,
+            headers: ["accept": "*/*",
+                      "Authorization": "Bearer \(jwt)"])
+        .responseDecodable(of: SocialRankResponse.self) { response in
+            defer {
+                isFetchingFriendRankData = false
+                DispatchQueue.main.async { completion?() } // 완료 핸들러 이동
+            }
+            
+            switch response.result {
+            case .success(let response):
+                
+                RankModel.friendsRankData = response.result.rankings
+                RankModel.myRankInFriends = response.result.currentUserRank
+                
+                if !response.result.rankings.isEmpty { // 빈 페이지가 아니어야만 다음 페이지가 가능
+                    friendRankPage += pageSize
+                }
+                
+            case .failure(let error):
+                print("Friends fetch error: \(error)")
+            }
         }
     }
     

@@ -8,6 +8,7 @@
 import UIKit
 
 class SocialView: UIView {
+    let attributes: [NSAttributedString.Key: Any] = [ .foregroundColor :  UIColor(red: 0.235, green: 0.235, blue: 0.235, alpha: 1)] // Set text color to blue
     
     private lazy var rankingIcon = UIImageView().then {
         $0.image = .rankingIcon
@@ -17,14 +18,23 @@ class SocialView: UIView {
     private lazy var titleLabel = UILabel().then { label in
         label.text = "랭킹"
         label.font = UIFont(name: "NotoSansKR-Medium", size: 20)
+        label.textColor = UIColor(red: 0.235, green: 0.235, blue: 0.235, alpha: 1)
     }
     
     public lazy var segmentView = UISegmentedControl(items: ["전체 랭킹", "친구 랭킹"]).then { seg in
         let customFont = UIFont(name: "NotoSansKR-Medium", size: 16)!
         seg.selectedSegmentIndex = 0
+        
         seg.setTitleTextAttributes([
-            NSAttributedString.Key.font: customFont
+            .foregroundColor: UIColor.darkGray,
+            .font: customFont
         ], for: .normal)
+        
+        seg.setTitleTextAttributes([
+            .foregroundColor: UIColor.darkGray,
+            .font: customFont
+        ], for: .selected)
+        
     }
     
     public lazy var myRankView = RankingTableViewCell()
