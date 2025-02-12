@@ -46,9 +46,6 @@ class DecoViewController: UIViewController {
             }
         }
     }
-
-
-
     
     override func viewWillAppear(_ animated: Bool) {
         fetchPuppyNameFromServer()
@@ -216,7 +213,6 @@ class DecoViewController: UIViewController {
             case .failure(let error):
                 print("Network Error: \(error.localizedDescription)")
             }
-
         }
     }
     
@@ -258,21 +254,19 @@ class DecoViewController: UIViewController {
             switch response.result {
             case .success(let response):
                 
+                // 모든 아이템의 isWeared를 false로 초기화
+                self.items.forEach { $0.isWeared = false }
                 // 착용한 아이템이 있다면 해제
                 self.items.forEach { item in
                     if item.isWeared {
                         self.unWearedItem(item: item)
                     }
                 }
-                
-                // 모든 아이템의 isWeared를 false로 초기화
-                self.items.forEach { $0.isWeared = false }
                         
                 if let items = response.result, !items.isEmpty {
-                    // 배열에 아이템이 있을 경우 → 첫 번째 아이템 사용
-                    if let firstItem = items.first,
-                       let puppyImage = DecoItemModel.getLevelImage(forItemId: firstItem.itemId, level: self.currentLevel) {
-                        self.decoView.puppyImageButton.setImage(puppyImage, for: .normal)
+                    // 첫 번째 아이템의 equippedImage (URL) 가져오기
+                    if let firstItem = items.first {
+                        self.decoView.puppyImageButton.setImageFromURL(firstItem.equippedImage)
                     }
                     
                     // 로컬 아이템 배열에서 itemId가 일치하는 아이템을 찾아 isWeared = true로 설정, wearedItem에 입고 있는 아이템의 Id값 저장
@@ -282,11 +276,9 @@ class DecoViewController: UIViewController {
                             self.wearedItem(item: self.items[index])
                         }
                     }
-                    
                 } else {
                     // 배열이 비어있을 경우 → 현재 레벨에 따라 기본 이미지 설정
                     let defaultImage: UIImage?
-                        
                         switch self.currentLevel {
                         case 1:
                             defaultImage = UIImage(named: "비숑_level1")
@@ -297,17 +289,57 @@ class DecoViewController: UIViewController {
                         default:
                             defaultImage = UIImage(named: "비숑_level1")
                         }
-            
-                    self.decoView.puppyImageButton.setImage(defaultImage, for: .normal)
                 }
-                                                
             case .failure(let error):
                 print("착용한 아이템 목록 조회 실패", error)
             }
         }
     }
+    
+    // 소유한 아이템 조회하기 (서버연동)
+    private func fetchOwnedItemsFromServer() {
+        let headers: HTTPHeaders = [
+            "accept": "*/*",
+            "Authorization": "Bearer \(KeychainService.get(key: UserInfoKey.jwt.rawValue)!)"
+        ]
+        let urlString = K.String.puppymodeLink + "/puppies/items"
+        
+        AF.request(urlString,
+                   method: .get,
+                   headers: headers)
+            .responseDecodable(of: PuppyOwnedItemResponse.self) { [weak self] response in
+        
+                guard let _ = self else { return }
+                    
+                switch response.result {
+                case .success(let response):
+                    print("소유한 아이템 조회 서버 연동 성공")
+                    
+                    guard let self = self else { return }
 
+                    // 서버에서 받은 소유한 아이템 ID를 저장
+                    self.purchasedItemIds = Set(response.result?.compactMap { $0.itemId } ?? [])
+                    print("서버에서 받은 아이템 ID들: \(self.purchasedItemIds)")
+                    
+                    // 모든 카테고리의 items를 합쳐서 하나의 배열로 만든다.
+                    var allItems: [DecoItemModel] = DecoItemModel.allCategoryData.flatMap { $0.items }
 
+                    // 서버에서 받은 아이템 ID들을 기반으로 업데이트
+                    for item in allItems {
+                        if purchasedItemIds.contains(item.itemId) {
+                            item.isPurchased = true
+                            print("✅ 업데이트된 아이템: \(item.itemId)")
+                        }
+                    }
+
+                    self.updatePurchasedItemsUI() // UI 업데이트
+
+                    
+                case .failure(let error):
+                    print("Network Error: \(error.localizedDescription)")
+                }
+            }
+    }
 }
 
 // MARK: - UICollectionViewDataSource
@@ -357,7 +389,6 @@ extension DecoViewController: UICollectionViewDelegate {
         if let categoryId = categoryId {
             print("선택한 카테고리 ID: \(categoryId) ,아이템 ID: \(selectedItem.itemId)")
         }
-        
         
         // 아이템 소유가 안된 경우
         if selectedItem.isPurchased == false {
@@ -422,12 +453,13 @@ extension DecoViewController: UICollectionViewDelegate {
                 present(alert, animated: true, completion: nil)
             }
         }
-        
     }
 }
 
+
+
+
 extension DecoViewController {
-    
     private func postPurchaseItemToServer(categoryId: Int, itemId: Int) {
         let headers: HTTPHeaders = [
             "accept": "*/*",
@@ -543,50 +575,6 @@ extension DecoViewController {
     }
     
     
-    // 소유한 아이템 조회하기 (서버연동)
-    private func fetchOwnedItemsFromServer() {
-        let headers: HTTPHeaders = [
-            "accept": "*/*",
-            "Authorization": "Bearer \(KeychainService.get(key: UserInfoKey.jwt.rawValue)!)"
-        ]
-        let urlString = K.String.puppymodeLink + "/puppies/items"
-        
-        AF.request(urlString,
-                   method: .get,
-                   headers: headers)
-            .responseDecodable(of: PuppyOwnedItemResponse.self) { [weak self] response in
-        
-                guard let _ = self else { return }
-                    
-                switch response.result {
-                case .success(let response):
-                    print("소유한 아이템 조회 서버 연동 성공")
-                    
-                    guard let self = self else { return }
-
-                    // 서버에서 받은 소유한 아이템 ID를 저장
-                    self.purchasedItemIds = Set(response.result?.compactMap { $0.itemId } ?? [])
-                    print("서버에서 받은 아이템 ID들: \(self.purchasedItemIds)")
-                    
-                    // items 배열에서 해당 아이템들의 isPurchased 업데이트
-                    self.items = self.items.map { item in
-                        var newItem = item
-                        if self.purchasedItemIds.contains(newItem.itemId) {
-                            newItem.isPurchased = true
-                            print("✅ 구매한 아이템 업데이트: \(newItem.itemId)")
-                        }
-                        return newItem
-                    }
-                    
-                    // UI 업데이트
-                    self.updatePurchasedItemsUI()
-                    
-                case .failure(let error):
-                    print("Network Error: \(error.localizedDescription)")
-                }
-            }
-    }
-    
     private func updatePurchasedItemsUI() {
         for (index, item) in items.enumerated() {
             let indexPath = IndexPath(item: index, section: 0)
@@ -674,3 +662,22 @@ extension DecoViewController {
     }
 }
 
+
+extension UIButton {
+    func setImageFromURL(_ urlString: String) {
+        guard let url = URL(string: urlString) else {
+            print("잘못된 URL: \(urlString)")
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, _, error in
+            if let data = data, let image = UIImage(data: data) {
+                DispatchQueue.main.async {
+                    self.setImage(image, for: .normal)
+                }
+            } else {
+                print("이미지 로드 실패: \(error?.localizedDescription ?? "알 수 없는 오류")")
+            }
+        }.resume()
+    }
+}
