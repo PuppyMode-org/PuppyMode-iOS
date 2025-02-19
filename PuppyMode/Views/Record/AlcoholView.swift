@@ -26,7 +26,7 @@ class AlcoholView: UIView {
     // 주종 옵션 컬렉션뷰
     public let alcoholCollectionView = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout().then {
         $0.scrollDirection = .horizontal
-        $0.estimatedItemSize = .init(width: 58, height: 58)
+        $0.estimatedItemSize = .init(width: 75, height: 46)
         $0.minimumLineSpacing = 25
     }).then {
         $0.backgroundColor = .clear
@@ -45,20 +45,6 @@ class AlcoholView: UIView {
         $0.showsVerticalScrollIndicator = false
         $0.separatorStyle = .none
     }
-    
-    // 직접 추가 버튼
-    private let plusButton = UIButton().then {
-        $0.setImage(.iconPlus, for: .normal)
-        $0.imageView?.snp.makeConstraints {
-            $0.centerY.equalToSuperview()
-            $0.width.height.equalTo(20)
-        }
-        
-        $0.setTitle("직접 추가", for: .normal)
-        $0.setTitleColor(UIColor(red: 0.61, green: 0.61, blue: 0.61, alpha: 1), for: .normal)
-        $0.titleLabel?.font = UIFont(name: "NotoSansKR-Medium", size: 15)
-    }
-
     
     // 다음 버튼
     public let nextButton = UIButton().then {
@@ -92,7 +78,6 @@ class AlcoholView: UIView {
             titleLabel,
             alcoholCollectionView,
             alcoholTableView,
-            plusButton,
             nextButton
         ].forEach {
             addSubview($0)
@@ -113,18 +98,13 @@ class AlcoholView: UIView {
         alcoholCollectionView.snp.makeConstraints {
             $0.top.equalTo(titleLabel.snp.bottom).offset(30)
             $0.horizontalEdges.equalToSuperview()
-            $0.height.equalTo(58)
+            $0.height.equalTo(46)
         }
         
         alcoholTableView.snp.makeConstraints {
             $0.top.equalTo(alcoholCollectionView.snp.bottom).offset(30)
             $0.horizontalEdges.equalToSuperview().inset(16)
-            $0.bottom.equalTo(plusButton.snp.top).offset(-20)
-        }
-        
-        plusButton.snp.makeConstraints {
             $0.bottom.equalTo(nextButton.snp.top).offset(-20)
-            $0.centerX.equalToSuperview()
         }
         
         nextButton.snp.makeConstraints {

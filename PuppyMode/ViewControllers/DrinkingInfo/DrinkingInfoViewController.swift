@@ -137,10 +137,11 @@ class DrinkingInfoViewController: UIViewController, UICollectionViewDelegate {
     
     // 오늘 술 마실 거에요! 버튼 클릭 이벤트
     @objc private func didTapMakeAppointmentButton() {
-        print("오늘 술 마실 거에요! 버튼 클릭됨")
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy.MM.dd"
+        let inputDate = formatter.string(from: Date()) // 현재 날짜 가져오기
         
-        // AppointmentViewController로 이동
-        let appointmentVC = AppointmentViewController()
+        let appointmentVC = AppointmentViewController(inputDate: inputDate)
         
         // 네비게이션 컨트롤러가 있는지 확인
         if let navigationController = self.navigationController {
@@ -241,7 +242,7 @@ class DrinkingInfoViewController: UIViewController, UICollectionViewDelegate {
         if let result = result {
             // 이름과 도수 업데이트
             drinkingInfoView.alcoholNameLabel.text = result.drinkItemName
-            drinkingInfoView.alcoholPercentageLabel.text = "\(result.alcoholPercentage)%"
+            drinkingInfoView.alcoholPercentageLabel.text = "\(result.alcoholPercentage)도"
             
             // 소주 기준 병과 잔 계산 (1병=360ml, 1잔=50ml)
             let (safeBottles, safeGlasses) = convertToBottlesAndGlasses(valueML: result.safetyValue, bottleML: 360.0, glassML: 50)

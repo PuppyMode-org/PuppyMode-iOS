@@ -232,9 +232,7 @@ class DecoViewController: UIViewController {
                 let puppyName = response.result.puppyName
                 print(puppyName)
                 self.currentLevel = response.result.level
-
                 self.decoView.puppyImageButton.setImageFromURL(response.result.imageUrl!)
-
                 self.decoView.puppyNameLabel.text = puppyName
                 
             case .failure(let error):
@@ -267,12 +265,10 @@ class DecoViewController: UIViewController {
                 }
                         
                 if let items = response.result, !items.isEmpty {
-
 //                    // 첫 번째 아이템의 equippedImage (URL) 가져오기
 //                    if let firstItem = items.first {
 //                        self.decoView.puppyImageButton.setImageFromURL(firstItem.equippedImage)
 //                    }
-
                     
                     // 로컬 아이템 배열에서 itemId가 일치하는 아이템을 찾아 isWeared = true로 설정, wearedItem에 입고 있는 아이템의 Id값 저장
                     for item in items {
@@ -281,21 +277,7 @@ class DecoViewController: UIViewController {
                             self.wearedItem(item: self.items[index])
                         }
                     }
-                
-                  } //else {
-//                    // 배열이 비어있을 경우 → 현재 레벨에 따라 기본 이미지 설정
-//                    let defaultImage: UIImage?
-//                        switch self.currentLevel {
-//                        case 1:
-//                            defaultImage = UIImage(named: "비숑_level1")
-//                        case 2:
-//                            defaultImage = UIImage(named: "비숑_level2")
-//                        case 3:
-//                            defaultImage = UIImage(named: "비숑_level3")
-//                        default:
-//                            defaultImage = UIImage(named: "비숑_level1")
-//                        }
-//                }
+                  }
             case .failure(let error):
                 print("착용한 아이템 목록 조회 실패", error)
             }
@@ -337,10 +319,8 @@ class DecoViewController: UIViewController {
                             print("✅ 업데이트된 아이템: \(item.itemId)")
                         }
                     }
-
                     self.updatePurchasedItemsUI() // UI 업데이트
 
-                    
                 case .failure(let error):
                     print("Network Error: \(error.localizedDescription)")
                 }
@@ -421,13 +401,9 @@ extension DecoViewController: UICollectionViewDelegate {
         
         // 아이템 소유가 된 경우
         if selectedItem.isPurchased == true {
-            
             // 아이템 착용이 안된 경우
             if selectedItem.isWeared == false {
-                // 아이템 착용 확인
-                let alert = UIAlertController(title: nil, message: "아이템을 착용하시겠습니까?", preferredStyle: .alert)
-                
-                let wearAction = UIAlertAction(title: "확인", style: .default) { _ in
+
                     self.postWearItemToServer(categoryId: categoryId!, itemId: selectedItem.itemId)
                     
 //                    // 착용한 아이템에 대해 셀 색상 변경
@@ -435,28 +411,9 @@ extension DecoViewController: UICollectionViewDelegate {
 //                        self.updateCellUI(cell as! DecoItemViewCell, isPurchased: true, isWeared: false)
 //                    }
                 }
-                let cancelAction = UIAlertAction(title: "취소", style: .cancel)
-                
-                alert.addAction(wearAction)
-                alert.addAction(cancelAction)
-                
-                present(alert, animated: true, completion: nil)
-            }
-            
             // 아이템 착용이 된 경우
             if selectedItem.isWeared == true {
-                let alert = UIAlertController(title: nil, message: "착용한 아이템을 해제하시겠습니까?", preferredStyle: .alert)
-                
-                let wearAction = UIAlertAction(title: "확인", style: .default) { _ in
-                    self.postUnWearItemToServer(categoryId: categoryId!, itemId: selectedItem.itemId)
-
-                }
-                let cancelAction = UIAlertAction(title: "취소", style: .cancel)
-                
-                alert.addAction(wearAction)
-                alert.addAction(cancelAction)
-                
-                present(alert, animated: true, completion: nil)
+                self.postUnWearItemToServer(categoryId: categoryId!, itemId: selectedItem.itemId)
             }
         }
     }
@@ -494,6 +451,7 @@ extension DecoViewController {
                             if let index = self?.items.firstIndex(where: { $0.itemId == response.result!.itemId }) {
                                 self?.items[index].isPurchased = true
                             }
+                            self!.fetchPointFromServer()
                             
                         case "잔여 포인트가 부족합니다.":
                             self?.showAlert(title: "", message: "포인트가 부족합니다.")
@@ -668,25 +626,5 @@ extension DecoViewController {
                     print("Network Error: \(error.localizedDescription)")
                 }
             }
-    }
-}
-
-
-extension UIButton {
-    func setImageFromURL(_ urlString: String) {
-        guard let url = URL(string: urlString) else {
-            print("잘못된 URL: \(urlString)")
-            return
-        }
-        
-        URLSession.shared.dataTask(with: url) { data, _, error in
-            if let data = data, let image = UIImage(data: data) {
-                DispatchQueue.main.async {
-                    self.setImage(image, for: .normal)
-                }
-            } else {
-                print("이미지 로드 실패: \(error?.localizedDescription ?? "알 수 없는 오류")")
-            }
-        }.resume()
     }
 }

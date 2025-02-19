@@ -40,7 +40,7 @@ class HomeView: UIView {
     
     lazy public var countdownLabel = UILabel().then { label in
         label.textAlignment = .center
-        label.font = UIFont(name: "NotoSansKR-Bold", size: 14)!
+        label.font = UIFont(name: "NotoSansKR-Bold", size: 12)!
         label.textColor = UIColor(hex: "#3C3C3C")
     }
     

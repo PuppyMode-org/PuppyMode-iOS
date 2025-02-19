@@ -33,7 +33,6 @@ class DrinkingViewController: UIViewController {
         
         checkDrinkingStatus()
         
-        drinkingView.promiseButton.addTarget(self, action: #selector(didTapPromiseButton), for: .touchUpInside)
         drinkingView.endButton.addTarget(self, action: #selector(didTapEndButton), for: .touchUpInside)
     }
 
@@ -55,109 +54,6 @@ class DrinkingViewController: UIViewController {
 
     @objc private func didTapBackButton() {
         dismiss(animated: true, completion: nil)
-    }
-
-    @objc private func didTapPromiseButton() {
-       print("Promise button tapped!")
-        // Create a container view for the picker and toolbar
-        let pickerContainerView = UIView()
-        pickerContainerView.backgroundColor = UIColor.white
-        pickerContainerView.layer.cornerRadius = 10
-        pickerContainerView.clipsToBounds = true
-        
-        
-        // Create UIDatePicker
-        let datePicker = UIDatePicker()
-        datePicker.datePickerMode = .time
-        datePicker.preferredDatePickerStyle = .wheels
-        pickerContainerView.addSubview(datePicker)
-        
-        // Create Toolbar
-        let toolbar = UIToolbar()
-        toolbar.sizeToFit()
-        
-        // Customizing the toolbar appearance
-        toolbar.barTintColor = UIColor(hex: "#FFFFFF") // Toolbar 배경색
-        toolbar.tintColor = UIColor(hex: "#3C3C3C")   // 버튼 텍스트 색상
-        
-        // Toolbar buttons
-        let cancelButton = UIBarButtonItem(title: "취소", style: .plain, target: self, action: #selector(didTapCancelPicker))
-        cancelButton.setTitleTextAttributes([.font: UIFont(name: "NotoSansKR-Medium", size: 14)!], for: .normal)
-        
-        let confirmButton = UIBarButtonItem(title: "확인", style: .plain, target: self, action: #selector(didTapConfirmPicker))
-        confirmButton.setTitleTextAttributes([.font: UIFont(name: "NotoSansKR-Medium", size: 14)!], for: .normal)
-        
-        let flexibleSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
-        
-        toolbar.setItems([cancelButton, flexibleSpace, confirmButton], animated: false)
-        
-        pickerContainerView.addSubview(toolbar)
-        
-        // Add to the main view
-        view.addSubview(pickerContainerView)
-        
-        // Layout for pickerContainerView
-        pickerContainerView.snp.makeConstraints { make in
-            make.leading.trailing.equalToSuperview()
-            make.height.equalTo(300) // Adjust height as needed
-            make.bottom.equalTo(self.view.snp.bottom).offset(300) // Start below the screen
-        }
-        
-        // Layout for datePicker
-        datePicker.snp.makeConstraints { make in
-            make.leading.trailing.equalToSuperview()
-            make.bottom.equalToSuperview().offset(-30)
-            make.height.equalTo(216) // Standard height for UIDatePicker
-        }
-        
-        // Layout for toolbar
-        toolbar.snp.makeConstraints { make in
-            make.leading.trailing.equalToSuperview()
-            make.bottom.equalTo(datePicker.snp.top).offset(-10)
-            make.height.equalTo(44) // Standard height for toolbar
-        }
-        
-        // Animate Picker Container View to slide up from the bottom
-        UIView.animate(withDuration: 0.3) {
-            pickerContainerView.snp.updateConstraints { make in
-                make.bottom.equalTo(self.view.snp.bottom) // Move to the bottom of the screen (visible)
-            }
-            self.view.layoutIfNeeded() // Apply layout changes immediately during animation
-        }
-    }
-    
-    @objc private func didTapCancelPicker() {
-        guard let pickerContainerView = view.subviews.last else { return }
-
-            UIView.animate(withDuration: 0.3, animations: {
-                pickerContainerView.snp.updateConstraints { make in
-                    make.bottom.equalTo(self.view.snp.bottom).offset(300) // Slide down below the screen
-                }
-                self.view.layoutIfNeeded() // Apply layout changes immediately during animation
-            }) { _ in
-                pickerContainerView.removeFromSuperview() // Remove from superview after animation completes
-           }
-    }
-
-    @objc private func didTapConfirmPicker() {
-        guard let pickerContainerView = view.subviews.last as? UIView,
-              let datePicker = pickerContainerView.subviews.compactMap({ $0 as? UIDatePicker }).first else { return }
-        
-        // 선택된 시간 가져오기
-        let selectedTime = datePicker.date
-        
-        // Format the selected time to ISO8601 format for the API request
-        let formatter = ISO8601DateFormatter()
-        formatter.timeZone = TimeZone.current
-        let formattedDateTime = formatter.string(from: selectedTime)
-        
-        print("선택된 시간:", formattedDateTime)
-        
-        // Picker를 닫습니다.
-        pickerContainerView.removeFromSuperview()
-        
-        // API 요청 보내기
-        sendRescheduleRequest(appointmentId: appointmentId, dateTime: formattedDateTime)
     }
     
     // MARK: Connect Api
@@ -194,6 +90,7 @@ class DrinkingViewController: UIViewController {
         }
     }
     
+    // 음주 상태 현황 label 업데이트 함수
     private func updateDrinkingView(with result: DrinkingStatusResult?) {
         guard let result = result else { return }
         
@@ -202,58 +99,6 @@ class DrinkingViewController: UIViewController {
         
         // progressTimeLabel 업데이트
         drinkingView.progressTimeLabel.text = "\(result.drinkingHours)시간 째 술마시는 중"
-    }
-    
-    // 술 약속 미루기 API
-    private func sendRescheduleRequest(appointmentId: Int, dateTime: String) {
-        guard let authToken = KeychainService.get(key: UserInfoKey.accessToken.rawValue) else {
-            print("인증 토큰을 가져올 수 없습니다.")
-            return
-        }
-        
-        let headers: HTTPHeaders = [
-            "Content-Type": "application/json",
-            "Authorization": "Bearer \(authToken)"
-        ]
-        
-        let parameters: [String: Any] = [
-            "dateTime": dateTime
-        ]
-        
-        let url = "\(K.String.puppymodeLink)/appointments/\(appointmentId)"
-        
-        AF.request(url,
-                   method: .patch,
-                   parameters: parameters,
-                   encoding: JSONEncoding.default,
-                   headers: headers)
-            .responseDecodable(of: RescheduleAppointmentResponse.self) { response in
-                switch response.result {
-                case .success(let data):
-                    if data.code == "SUCCESS_PUT_APPOINTMENT_RESCHEDULED" {
-                        print("술 약속 수정 성공!")
-                        
-                        // 모달 창 표시
-                        self.showSuccessModal(message: data.result?.message ?? "술 약속이 성공적으로 수정되었습니다.")
-                    } else {
-                        print("응답 코드가 SUCCESS_PUT_APPOINTMENT_RESCHEDULED가 아닙니다.")
-                        self.showSuccessModal(message: data.result?.message ?? "술 약속 수정에 실패하였습니다.")
-                    }
-                case .failure(let error):
-                    print("API 요청 실패:", error.localizedDescription)
-                }
-            }
-    }
-
-    // 술 약속 미루기 결과 모달 창
-    private func showSuccessModal(message: String) {
-        let alertController = UIAlertController(title: "성공", message: message, preferredStyle: .alert)
-        let confirmAction = UIAlertAction(title: "확인", style: .default, handler: nil)
-        alertController.addAction(confirmAction)
-        
-        DispatchQueue.main.async {
-            self.present(alertController, animated: true, completion: nil)
-        }
     }
     
     // 음주 상태 종료하기 API

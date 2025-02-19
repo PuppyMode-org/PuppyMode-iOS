@@ -20,7 +20,7 @@ class CalendarHangoverTableViewCell: UITableViewCell {
     }
     
     public let hangoverImage = UIImageView().then {
-        $0.backgroundColor = .main
+        $0.backgroundColor = .clear
     }
     
     // MARK: - init

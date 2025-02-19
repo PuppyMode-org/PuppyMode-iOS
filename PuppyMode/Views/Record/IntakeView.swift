@@ -172,6 +172,9 @@ class IntakeView: UIView {
     
     // MARK: - Slider Action (슬라이더 값 변경 시 호출되는 함수)
     @objc private func sliderValueChanged(_ sender: UISlider) {
+        let step: Float = 0.5
+        let roundedValue = round(sender.value / step) * step
+        sender.value = roundedValue
         updateValueLabel()
         updateAddButtonState()
     }
@@ -192,7 +195,7 @@ class IntakeView: UIView {
     }
     
     private func updateAddButtonState() {
-        let sliderValue = Int(slider.value)
+        let sliderValue = slider.value
         addButton.alpha = sliderValue > 0 ? 1.0 : 0.5
         addButton.isEnabled = sliderValue > 0
     }
@@ -203,10 +206,8 @@ class IntakeView: UIView {
     }
     
     private func updateValueLabel() {
-        if isBottleMode {
-            valueLabel.text = "\(Int(slider.value)) 병"
-        } else {
-            valueLabel.text = "\(Int(slider.value)) 잔"
-        }
+        let isInteger = floor(slider.value) == slider.value
+        let formattedValue = isInteger ? String(format: "%.0f", slider.value) : String(format: "%.1f", slider.value)
+        valueLabel.text = isBottleMode ? "\(formattedValue) 병" : "\(formattedValue) 잔"
     }
 }

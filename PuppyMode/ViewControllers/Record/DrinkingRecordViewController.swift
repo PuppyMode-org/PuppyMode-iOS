@@ -33,6 +33,7 @@ class DrinkingRecordViewController: UIViewController {
         drinkingView.tableView.separatorStyle = .none
         
         setAction()
+        updateCompleteButtonState()
     }
     
     // MARK: - function
@@ -49,7 +50,13 @@ class DrinkingRecordViewController: UIViewController {
         DispatchQueue.main.async {
             self.drinkingView.tableView.reloadData()
             self.drinkingView.updateTableViewHeight()
+            self.updateCompleteButtonState()
         }
+    }
+    
+    private func updateCompleteButtonState() {
+        drinkingView.completeButton.isEnabled = !addedItems.isEmpty
+        drinkingView.completeButton.alpha = addedItems.isEmpty ? 0.5 : 1.0
     }
 
     // MARK: - action
@@ -157,6 +164,7 @@ class DrinkingRecordViewController: UIViewController {
         addedItems.remove(at: rowIndex)
         drinkingView.tableView.deleteRows(at: [IndexPath(row: rowIndex, section: 0)], with: .automatic)
         drinkingView.updateTableViewHeight()
+        self.updateCompleteButtonState()
     }
 }
 

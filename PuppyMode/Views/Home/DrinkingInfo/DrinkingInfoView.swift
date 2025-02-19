@@ -98,7 +98,6 @@ class DrinkingInfoView: UIView, UICollectionViewDelegate, UICollectionViewDataSo
         $0.setTitleColor(UIColor(hex: "#3C3C3C"), for: .normal)
         $0.titleLabel?.textAlignment = .center
         $0.titleLabel?.font = UIFont(name: "NotoSansKR-Medium", size: 20)
-        
     }
     
     override init(frame: CGRect) {

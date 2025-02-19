@@ -9,7 +9,7 @@ import Foundation
 
 struct DrankAlcoholModel {
     let name: String
-    let sliderValue: Int
+    let sliderValue: Float
     let isBottleMode: Bool // true for bottles, false for glasses
     let drinkCategoryId: Int
     let drinkItemId: Int

@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import Alamofire
 
 class RecordCompleteViewController: UIViewController {
 
@@ -89,10 +90,43 @@ class RecordCompleteViewController: UIViewController {
         completionView.progressComponentView.updateProgress(to: progressValue, percentageText: "\(puppyPercent)%")
         completionView.progressComponentView.setLevelText(levelText)
     }
+    
+    private func setFeedAPI() {
+        let url = "https://puppy-mode.site/drinks/feed"
+        
+        guard let jwt = KeychainService.get(key: UserInfoKey.accessToken.rawValue) else {
+            print("JWT Token not found")
+            return
+        }
+        
+        let headers: HTTPHeaders = [
+            "Authorization": "Bearer \(jwt)",
+            "Accept": "*/*"
+        ]
+
+        AF.request(url, method: .post, headers: headers).responseJSON { response in
+            switch response.result {
+            case .success(let data):
+                print("✅ 먹이 주기 성공: \(data)")
+                
+                DispatchQueue.main.async {
+                    // 먹이 주기 성공 후 notification을 보내기
+                    NotificationCenter.default.post(name: .feed, object: nil, userInfo: ["animationType": "FEEDING"])
+                    self.navigationController?.popToRootViewController(animated: true)
+                }
+            case .failure(let error):
+                print("❌ 먹이 주기 실패: \(error.localizedDescription)")
+            }
+        }
+    }
 
     // MARK: - Actions
     @objc private func actionButtonTapped() {
         print("먹이주러 가기 버튼이 눌렸습니다.")
-        navigationController?.popToRootViewController(animated: true)
+        setFeedAPI()
     }
+}
+
+extension Notification.Name {
+    static let feed = Notification.Name("feed")
 }

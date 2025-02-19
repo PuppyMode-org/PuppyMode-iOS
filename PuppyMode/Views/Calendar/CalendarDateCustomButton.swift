@@ -45,6 +45,18 @@ class CalendarDateCustomButton: UIView {
         $0.font = UIFont(name: "NotoSansKR-Medium", size: 20)
     }
     
+    // 화살표
+    public let rightButton = UIImageView().then {
+        $0.image = .iconButtonRight
+        $0.isHidden = true
+    }
+    
+    // 추가
+    public let plusButton = UIImageView().then {
+        $0.image = .iconRecordPlus
+        $0.isHidden = true
+    }
+    
     // MARK: - init
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -73,7 +85,8 @@ class CalendarDateCustomButton: UIView {
     private func setView() {
         [
             backView, circleView,
-            titleLabel
+            titleLabel,
+            rightButton, plusButton
         ].forEach {
             addSubview($0)
         }
@@ -90,7 +103,17 @@ class CalendarDateCustomButton: UIView {
         
         titleLabel.snp.makeConstraints {
             $0.centerY.equalToSuperview().offset(-3)
-            $0.right.equalToSuperview().offset(-45)
+            $0.right.equalToSuperview().offset(-60)
+        }
+        
+        rightButton.snp.makeConstraints {
+            $0.centerY.equalToSuperview()
+            $0.right.equalToSuperview().offset(-27)
+        }
+        
+        plusButton.snp.makeConstraints {
+            $0.centerY.equalToSuperview()
+            $0.right.equalToSuperview().offset(-40)
         }
     }
 }

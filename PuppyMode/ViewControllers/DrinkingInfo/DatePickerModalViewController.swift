@@ -100,9 +100,25 @@ class DatePickerModalViewController: UIViewController {
     }
     
     @objc private func didTapConfirm() {
+        let now = Date() // 현재 시간
+        let selectedDate = datePicker.date // 선택된 시간
+        
+        // 선택된 시간이 현재 시간보다 이전인지 확인
+        if selectedDate < now {
+            // Alert 창 표시
+            let alert = UIAlertController(title: "오류",
+                                          message: "현재 시간 이후로 시간을 설정해주세요.",
+                                          preferredStyle: .alert)
+            let confirmAction = UIAlertAction(title: "확인", style: .default, handler: nil)
+            alert.addAction(confirmAction)
+            self.present(alert, animated: true, completion: nil)
+            return // Confirm 동작 중단
+        }
+        
+        // 선택된 시간이 유효한 경우 Confirm 처리
         let formatter = DateFormatter()
         formatter.dateFormat = "a hh:mm" // 오전/오후 hh:mm 형식
-        let selectedTime = formatter.string(from: datePicker.date)
+        let selectedTime = formatter.string(from: selectedDate)
         
         onTimeSelected?(selectedTime) // 선택된 시간 전달
         self.dismiss(animated: true, completion: nil) // 화면 닫기

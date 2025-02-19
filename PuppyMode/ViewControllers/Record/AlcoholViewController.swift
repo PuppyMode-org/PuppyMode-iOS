@@ -40,6 +40,24 @@ class AlcoholViewController: UIViewController {
         alcoholView.nextButton.addTarget(self, action: #selector(nextButtonTapped), for: .touchUpInside)
     }
     
+    private func selectFirstCategory() {
+        guard !categories.isEmpty else { return }
+
+        let firstIndexPath = IndexPath(item: 0, section: 0)
+        selectedCategoryIndex = firstIndexPath
+        alcoholView.alcoholCollectionView.selectItem(at: firstIndexPath, animated: false, scrollPosition: [])
+
+        DispatchQueue.main.async {
+            if let cell = self.alcoholView.alcoholCollectionView.cellForItem(at: firstIndexPath) as? AlcoholKindCollectionViewCell {
+                cell.backView.backgroundColor = .main
+                cell.backView.layer.borderColor = UIColor.main.cgColor
+            }
+        }
+
+        let firstCategory = categories[0]
+        setAlcoholListAPI(categoryId: firstCategory.categoryId)
+    }
+    
     private func setCategoryAPI() {
         let url = "https://puppy-mode.site/drinks/categories"
         
@@ -58,7 +76,10 @@ class AlcoholViewController: UIViewController {
             case .success(let data):
                 self.categories = data.result
                 self.alcoholView.alcoholCollectionView.reloadData()
-                case .failure(let error):
+                
+                self.selectFirstCategory()
+                
+            case .failure(let error):
                 print("\(error.localizedDescription)")
             }
         }
@@ -156,17 +177,25 @@ extension AlcoholViewController: UICollectionViewDataSource, UICollectionViewDel
         // 이전에 선택된 셀 초기화
         if let previousIndex = selectedCategoryIndex,
            let previousCell = collectionView.cellForItem(at: previousIndex) as? AlcoholKindCollectionViewCell {
-            previousCell.backView.backgroundColor = .clear
-            previousCell.backView.layer.borderColor = UIColor.clear.cgColor
+            previousCell.backView.backgroundColor = .white
+            previousCell.backView.layer.borderColor = UIColor(red: 0.95, green: 0.96, blue: 0.96, alpha: 1).cgColor
         }
 
         // 현재 선택된 셀 변경
         guard let cell = collectionView.cellForItem(at: indexPath) as? AlcoholKindCollectionViewCell else { return }
         cell.backView.backgroundColor = .main
-        cell.backView.layer.borderColor = UIColor(red: 0.563, green: 0.563, blue: 0.563, alpha: 1).cgColor
+        cell.backView.layer.borderColor = UIColor.main.cgColor
 
         // 현재 선택된 인덱스 저장
         selectedCategoryIndex = indexPath
+        
+        // 기존에 선택된 테이블뷰 셀 초기화
+        if let previousIndexPath = selectedIndexPath,
+           let previousCell = alcoholView.alcoholTableView.cellForRow(at: previousIndexPath) as? AlcoholDetailTableViewCell {
+            previousCell.backView.layer.borderWidth = 1
+            previousCell.backView.layer.borderColor = UIColor(red: 0.953, green: 0.957, blue: 0.965, alpha: 1).cgColor
+        }
+        selectedIndexPath = nil
 
         // API 호출
         let selectedCategory = categories[indexPath.row]

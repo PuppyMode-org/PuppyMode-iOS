@@ -51,7 +51,7 @@ class IntakeViewController: UIViewController {
     }
     
     @objc private func addButtonTapped() {
-        let sliderValue = Int(intakeView.slider.value)
+        let sliderValue = intakeView.slider.value
         let isBottleMode = intakeView.isBottleMode
         let unit = isBottleMode ? "병" : "잔"
 

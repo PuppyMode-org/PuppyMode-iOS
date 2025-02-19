@@ -6,25 +6,17 @@
 //
 
 import UIKit
+import Alamofire
+import SDWebImage
 
 class CalendarDetailViewController: UIViewController {
     public let calendarDetailView = CalendarDetailView()
+    var selectedDate: String?
+    var drinkHistoryId: Int?
     
-    // 테스트값
-    struct Alcohol {
-        let alcohol: String
-        let intake: String
-    }
-    let dummy = [
-        Alcohol(alcohol: "참이슬 360ml", intake: "1.5병"),
-        Alcohol(alcohol: "새로 360ml", intake: "1.5병"),
-        Alcohol(alcohol: "처음처럼 360ml", intake: "1.5병"),
-        Alcohol(alcohol: "테라 360ml", intake: "2잔"),
-        Alcohol(alcohol: "카스 360ml", intake: "2잔"),
-    ]
-    let hangoverDummy: [String] = [
-        "머리가 아파요", "토할 것 같아요"
-    ]
+    var drinkDetails: [DrinkItem] = []
+    var hangoverDetails: [HangoverItem] = []
+    var feed: Feed?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -32,11 +24,7 @@ class CalendarDetailViewController: UIViewController {
         
         setDelegate()
         setAction()
-        
-        calendarDetailView.alcoholTableView.reloadData()
-        DispatchQueue.main.async {
-            self.updateTableViewHeight()
-        }
+        fetchCalendarDetails()
     }
     
     // MARK: - function
@@ -47,8 +35,68 @@ class CalendarDetailViewController: UIViewController {
         calendarDetailView.hangoverTableView.delegate = self
     }
     
-    private func setAction() {
-        calendarDetailView.backButton.addTarget(self, action: #selector(backButtonTapped), for: .touchUpInside)
+    private func fetchCalendarDetails() {
+        let url = "https://puppy-mode.site/calendar/daily?drinkHistoryId=\(drinkHistoryId ?? 0)"
+        print(drinkHistoryId!)
+        
+        guard let jwt = KeychainService.get(key: UserInfoKey.accessToken.rawValue) else {
+            print("JWT Token not found")
+            return
+        }
+        
+        let headers: HTTPHeaders = [
+            "accept": "*/*",
+            "Authorization": "Bearer \(jwt)"
+        ]
+        
+        AF.request(url, method: .get, headers: headers).responseData { response in
+            switch response.result {
+            case .success(let data):
+                do {
+                    let decoder = JSONDecoder()
+                    let result = try decoder.decode(CalendarDetailResponse.self, from: data)
+                    if let firstResult = result.result.first {
+                        self.drinkDetails = firstResult.drinkItems
+                        self.hangoverDetails = firstResult.hangoverItems ?? []
+                        self.feed = firstResult.feed
+                        DispatchQueue.main.async {
+                            self.updateUI(with: firstResult)
+                        }
+                    }
+                } catch let decodingError {
+                    print("JSON 디코딩 실패: \(decodingError)")
+                    if let jsonString = String(data: data, encoding: .utf8) {
+                        print("응답 데이터: \(jsonString)")
+                    }
+                }
+            case .failure(let error):
+                print("Error fetching calendar details: \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    private func updateUI(with result: CalendarDetail) {
+        calendarDetailView.alcoholTableView.reloadData()
+        calendarDetailView.hangoverTableView.reloadData()
+        
+        DispatchQueue.main.async {
+            self.updateTableViewHeight()
+        }
+        
+        if let feed = self.feed {
+            calendarDetailView.feedLabel.text = feed.feedingType
+            if let url = URL(string: feed.feedImageUrl) {
+                calendarDetailView.feedImage.kf.setImage(with: url)
+            }
+        }
+        
+        let drinkAmount = result.drinkAmount
+
+        let safetyValue = result.drinkItems.first?.safetyValue ?? 0
+        let maxValue = result.drinkItems.first?.maxValue ?? 0
+        
+        let progress = min(Float(drinkAmount) / Float(maxValue), 1.0)
+        calendarDetailView.progressView.progress = progress
     }
     
     private func updateTableViewHeight() {
@@ -110,6 +158,10 @@ class CalendarDetailViewController: UIViewController {
         }
     }
     
+    private func setAction() {
+        calendarDetailView.backButton.addTarget(self, action: #selector(backButtonTapped), for: .touchUpInside)
+    }
+    
     // MARK: - action
     @objc
     private func backButtonTapped() {
@@ -121,9 +173,9 @@ class CalendarDetailViewController: UIViewController {
 extension CalendarDetailViewController: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         if tableView == calendarDetailView.alcoholTableView {
-            return dummy.count
+            return drinkDetails.count
         } else if tableView == calendarDetailView.hangoverTableView {
-            return hangoverDummy.count
+            return hangoverDetails.count
         }
         return 0
     }
@@ -133,23 +185,24 @@ extension CalendarDetailViewController: UITableViewDataSource, UITableViewDelega
             guard let cell = tableView.dequeueReusableCell(withIdentifier: CalendarAlcoholTableViewCell.identifier, for: indexPath) as? CalendarAlcoholTableViewCell else {
                 return UITableViewCell()
             }
-            
-            let item = dummy[indexPath.row]
-            cell.alcoholLabel.text = item.alcohol
-            cell.intakeLabel.text = item.intake
+            let item = drinkDetails[indexPath.row]
+
+            let isInteger = floor(item.value) == item.value
+            let formattedValue = isInteger ? String(format: "%.0f", item.value) : String(format: "%.1f", item.value)
+
+            cell.alcoholLabel.text = "\(item.itemName)"
+            cell.intakeLabel.text = "\(formattedValue)\(item.unit)"
             
             return cell
         } else if tableView == calendarDetailView.hangoverTableView {
             guard let cell = tableView.dequeueReusableCell(withIdentifier: CalendarHangoverTableViewCell.identifier, for: indexPath) as? CalendarHangoverTableViewCell else {
                 return UITableViewCell()
             }
-            
-            let item = hangoverDummy[indexPath.row]
-            cell.hangoverLabel.text = item
-            
+            let item = hangoverDetails[indexPath.row]
+            cell.hangoverLabel.text = item.hangoverName
+            cell.hangoverImage.sd_setImage(with: URL(string: item.imageUrl), placeholderImage: UIImage(named: "placeholder"))
             return cell
         }
-        
         return UITableViewCell()
     }
     

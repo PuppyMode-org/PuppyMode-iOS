@@ -86,12 +86,8 @@ class CalendarView: UIView {
         $0.locale = Locale(identifier: "ko_KR")
         
         // 오늘 날짜 표시
-        $0.appearance.todayColor = .none
-        $0.appearance.titleTodayColor = .black
-        
-        // 이벤트
-        $0.appearance.eventDefaultColor = .main
-        $0.appearance.eventSelectionColor = .main
+        $0.appearance.todayColor = .main
+        $0.appearance.titleTodayColor = .white
     }
     
     // 모달 배경
@@ -144,7 +140,7 @@ class CalendarView: UIView {
     public func updateCalendarScope(to scope: FSCalendarScope) {
         calendar.scope = scope
         calendar.snp.remakeConstraints {
-            $0.top.equalTo(safeAreaLayoutGuide).offset(180)
+            $0.top.equalTo(safeAreaLayoutGuide).offset(215)
             $0.horizontalEdges.equalToSuperview().inset(15)
             $0.height.equalTo(scope == .month ? 310 : 130)
         }
@@ -209,7 +205,7 @@ class CalendarView: UIView {
         }
         
         calendar.snp.makeConstraints {
-            $0.top.equalTo(safeAreaLayoutGuide).offset(180)
+            $0.top.equalTo(safeAreaLayoutGuide).offset(215)
             $0.horizontalEdges.equalToSuperview().inset(15)
             $0.height.equalTo(310)
         }

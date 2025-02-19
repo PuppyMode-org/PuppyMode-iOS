@@ -44,20 +44,6 @@ class DrinkingView: UIView {
         $0.font = UIFont(name: "NotoSansKR-Medium", size: 18)
     }
 
-    let promiseButton = UIButton(type: .system).then {
-        let title = "술 약속 미루기"
-        let attributedTitle = NSAttributedString(
-            string: title,
-            attributes: [
-                .font: UIFont(name: "NotoSansKR-Medium", size: 18),
-                .foregroundColor: UIColor(hex: "#3C3C3C"),
-                .underlineStyle: NSUnderlineStyle.single.rawValue // Add underline
-            ]
-        )
-        $0.setAttributedTitle(attributedTitle, for: .normal)
-        $0.backgroundColor = UIColor(hex: "#FBFBFB")
-    }
-
     let endButton = UIButton(type: .system).then {
         $0.setTitle("음주 종료하기", for: .normal)
         $0.setTitleColor(UIColor(hex: "#3C3C3C"), for: .normal)
@@ -83,7 +69,6 @@ class DrinkingView: UIView {
         addSubview(progressNameLabel)
         addSubview(progressTimeLabel)
         
-        addSubview(promiseButton)
         addSubview(endButton)
     }
 
@@ -105,12 +90,6 @@ class DrinkingView: UIView {
             make.top.equalTo(progressNameLabel.snp.bottom).offset(17)
             make.centerX.equalToSuperview()
             make.leading.trailing.equalToSuperview().inset(20)
-        }
-
-        promiseButton.snp.makeConstraints { make in
-            make.bottom.equalTo(endButton.snp.top).offset(-10)
-            make.leading.trailing.equalToSuperview().inset(20)
-            make.height.equalTo(30)
         }
 
         endButton.snp.makeConstraints { make in

@@ -57,11 +57,16 @@ class RecordCompleteView: UIView {
     
     let progressComponentView = ProgressComponentView()
     
+    let progressBackView = UIView().then {
+        $0.backgroundColor = .white
+        $0.layer.cornerRadius = 10
+    }
+    
     // MARK: - Initializer
     override init(frame: CGRect) {
         super.init(frame: frame)
         
-        backgroundColor = .white
+        backgroundColor = UIColor(red: 0.983, green: 0.983, blue: 0.983, alpha: 1)
         
         setupViews()
     }
@@ -74,7 +79,7 @@ class RecordCompleteView: UIView {
     private func setupViews() {
         
         // Add subviews to the view hierarchy
-        [titleLabel, messageLabel, steakImageView, rewardLabel, actionButton, progressComponentView].forEach { addSubview($0) }
+        [titleLabel, messageLabel, steakImageView, rewardLabel, actionButton, progressBackView, progressComponentView].forEach { addSubview($0) }
         
         // Set constraints using SnapKit
         
@@ -107,11 +112,17 @@ class RecordCompleteView: UIView {
             make.height.equalTo(46) // 버튼 높이
         }
         
+        progressBackView.snp.makeConstraints {
+            $0.top.equalTo(progressComponentView.snp.top).offset(-15)
+            $0.horizontalEdges.equalToSuperview().inset(16)
+            $0.height.equalTo(240)
+        }
+        
         progressComponentView.snp.makeConstraints{ make in
             make.top.equalTo(actionButton.snp.bottom).offset(95)
             make.horizontalEdges.equalToSuperview()
         }
-       
+        
     }
 }
 

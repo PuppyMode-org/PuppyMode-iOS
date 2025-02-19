@@ -11,10 +11,10 @@ struct StartAppointmentResponse: Codable {
     let isSuccess: Bool
     let code: String
     let message: String
-    let result: AppointmentResult?
+    let result: StartAppointmentResult?
 }
 
-struct AppointmentResult: Codable {
+struct StartAppointmentResult: Codable {
     let appointmentId: Int
     let address: String
     let locationName: String
@@ -51,6 +51,7 @@ struct Appointment: Codable {
     let appointmentId: Int
     let dateTime: String // 날짜 및 시간 (ISO8601 형식)
     let address: String
+    let locationName: String
     let status: String   // scheduled, completed 등 상태 값
 }
 
@@ -152,4 +153,41 @@ struct NearestScheduledAppointmentResult: Codable {
     let dateTime: String
     let address: String
     let status: String
+}
+
+struct DeleteAppointmentResponse: Codable {
+    let isSuccess: Bool
+    let code: String
+    let message: String
+}
+
+struct UpdateAppointmentResponse: Codable {
+    let isSuccess: Bool
+    let code: String
+    let message: String
+    let result: UpdateAppointmentResult?
+}
+
+struct UpdateAppointmentResult: Codable {
+    let appointmentId: Int
+    let updatedTime: String
+    let address: String
+    let locationName: String
+    let appointmentStatus: String
+}
+
+struct AppointmentStatusResponse: Codable {
+    let isSuccess: Bool
+    let code: String
+    let message: String
+    let result: AppointmentStatusResult?
+}
+
+struct AppointmentStatusResult: Codable {
+    let appointmentId: Int
+    let isDrinking: Bool
+    let appointmentStatus: String
+    let puppyName: String
+    let drinkingHours: Int
+    let drinkingImageUrls: [String]
 }
