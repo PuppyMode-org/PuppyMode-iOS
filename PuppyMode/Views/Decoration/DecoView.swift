@@ -85,7 +85,9 @@ class DecoView: UIView {
         self.addSubview(puppyImageButton)
         puppyImageButton.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview().inset(16)
-            make.height.equalTo(247)
+            make.height.lessThanOrEqualTo(200)
+            
+           // make.height.equalTo(self.safeAreaLayoutGuide).multipliedBy(0.3)
             make.top.equalTo(self.safeAreaLayoutGuide).offset(100)
         }
 
@@ -108,6 +110,8 @@ class DecoView: UIView {
         backgroundView.snp.makeConstraints { make in
             make.leading.trailing.bottom.equalToSuperview()
             make.top.equalTo(puppyNameLabel.snp.bottom).offset(30)
+            //make.height.equalToSuperview().multipliedBy(0.4) // 화면 높이의 40%로 설정
+
         }
         
           

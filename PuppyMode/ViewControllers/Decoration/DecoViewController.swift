@@ -57,9 +57,19 @@ class DecoViewController: UIViewController {
     
     private func setupCollectionView() {
         let layout = UICollectionViewFlowLayout()
-        layout.itemSize = CGSize(width: 109, height: 109)
-        layout.minimumInteritemSpacing = 12 // 아이템 간의 최소 간격
-        layout.minimumLineSpacing = 14      // 행 간의 최소 간격
+
+        // 한 줄에 몇 개의 아이템을 표시할지 설정
+        let itemsPerRow: CGFloat = 3
+        let spacing: CGFloat = 12 // 아이템 간의 간격
+        let totalSpacing = spacing * (itemsPerRow - 1) // 전체 간격 계산
+
+        // 화면 너비에서 패딩과 간격을 뺀 후, 아이템 크기 계산
+        let itemWidth = (UIScreen.main.bounds.width - totalSpacing - 45) / itemsPerRow
+
+        layout.itemSize = CGSize(width: itemWidth, height: itemWidth)
+        layout.minimumInteritemSpacing = spacing
+        layout.minimumLineSpacing = 14 // 행 간의 최소 간격
+
 
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.register(DecoItemViewCell.self, forCellWithReuseIdentifier:DecoItemViewCell.identifier)
@@ -628,4 +638,10 @@ extension DecoViewController {
                 }
             }
     }
+}
+
+
+import SwiftUI
+#Preview {
+    DecoViewController()
 }
